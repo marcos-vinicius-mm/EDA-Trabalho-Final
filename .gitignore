@@ -43,6 +43,9 @@
 build/
 Build/
 build-*/
+.vscode/*
+!.vscode/tasks.json
+!.vscode/launch.json
 
 # CMake generated files
 CMakeFiles/
