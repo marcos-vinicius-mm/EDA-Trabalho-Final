@@ -210,7 +210,7 @@ public:
 
     /**
      * @brief Insere um novo elemento na arvore iterativamente e efetua o rebalanceamento.
-     * * @param k := chave
+     * @param k := chave
      * @param v := valor
      */
     bool insert(const Key& k, const Value& v) override {
@@ -254,7 +254,7 @@ public:
 
     /**
      * @brief Atualiza o valor de uma chave existente iterativamente.
-     * * @param k := chave
+     * @param k := chave
      * @param v := novo valor 
      */
     void update(const Key& k, const Value& v) override {
@@ -276,7 +276,7 @@ public:
 
     /**
      * @brief Retorna true se a chave estiver presente, usando busca iterativa.
-     * * @param k := chave a ser pesquisada
+     * @param k := chave a ser pesquisada
      */
     bool contains(const Key& k) const override {
         Node* current = m_root;
@@ -335,7 +335,7 @@ public:
     /**
      * @brief Remove iterativamente o elemento com chave k se ele existir.
      * Lida com os 3 casos de delecao em BST e ajusta as alturas subindo ate a raiz.
-     * * @param k := chave a ser removida
+     * @param k := chave a ser removida
      */
     bool remove(const Key& k) override {
         Node* current = m_root;

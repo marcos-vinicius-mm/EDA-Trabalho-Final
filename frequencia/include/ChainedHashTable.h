@@ -1,7 +1,7 @@
 /**
  * @file ChainedHashTable.h
  * @author Atilio G. Luiz (gomes.atilio@ufc.br)
- * @author Marcos V. de Morais Maniçoba (marcosufcvinicius@alu.ufc.br)
+ * @author Marcos V. de Morais Manicoba (marcosufcvinicius@alu.ufc.br)
  * @brief Uma tabela hash com tratamento de colisao por encadeamento exterior - Estrutura de dados avancada - 2026.1
  * @version 0.2
  * @date 2026-05-28
