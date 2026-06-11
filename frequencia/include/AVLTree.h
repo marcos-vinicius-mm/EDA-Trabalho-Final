@@ -4,7 +4,7 @@
  * @brief Uma arvore AVL com balanceamento completamente iterativo - Estrutura de dados avancada - 2026.1
  * @version 0.1
  * @date 2026-06-04
- * * @copyright Copyright (c) 2026
+ * @copyright Copyright (c) 2026
  */
 
 #ifndef AVL_TREE_H
@@ -20,7 +20,8 @@
 
 /**
  * @brief Classe que implementa um dicionario usando uma Arvore AVL Iterativa.
- * * @tparam Key tipo da chave
+ * 
+ * @tparam Key tipo da chave
  * @tparam Value tipo do valor
  */
 template <typename Key, typename Value>
@@ -47,6 +48,7 @@ private:
     size_t m_number_of_elements;
     mutable Metrics m_metrics;
 
+
     // Metodos auxiliares iterativos de altura e balanceamento
 
     int get_height(Node* node) const {
@@ -62,6 +64,7 @@ private:
             node->height = 1 + std::max(get_height(node->left), get_height(node->right));
         }
     }
+
 
     // Metodos iterativos de rotacao
 
@@ -93,6 +96,7 @@ private:
         m_metrics.rotations++;
     }
 
+
     /**
      * @brief Rotacao simples a esquerda (Caso RR)
      */
@@ -120,6 +124,7 @@ private:
         update_height(y);
         m_metrics.rotations++;
     }
+
 
     /**
      * @brief Metodo para balancear a arvore subindo ate a raiz de forma iterativa.
@@ -210,6 +215,7 @@ public:
 
     /**
      * @brief Insere um novo elemento na arvore iterativamente e efetua o rebalanceamento.
+     * 
      * @param k := chave
      * @param v := valor
      */
@@ -254,6 +260,7 @@ public:
 
     /**
      * @brief Atualiza o valor de uma chave existente iterativamente.
+     * 
      * @param k := chave
      * @param v := novo valor 
      */
@@ -276,6 +283,7 @@ public:
 
     /**
      * @brief Retorna true se a chave estiver presente, usando busca iterativa.
+     * 
      * @param k := chave a ser pesquisada
      */
     bool contains(const Key& k) const override {
@@ -335,6 +343,7 @@ public:
     /**
      * @brief Remove iterativamente o elemento com chave k se ele existir.
      * Lida com os 3 casos de delecao em BST e ajusta as alturas subindo ate a raiz.
+     * 
      * @param k := chave a ser removida
      */
     bool remove(const Key& k) override {
@@ -377,7 +386,7 @@ public:
                 succ = succ->left;
             }
             
-            // Troca a chave/valor (iterativamente muito mais simples que refazer ponteiros)
+            // Troca a chave/valor do no atual com o sucessor
             current->key = succ->key;
             current->value = succ->value;
             
@@ -441,7 +450,7 @@ public:
     void print_csv(std::ostream& os) const override {
         auto sorted = to_sorted_vector();
         for (const auto& par : sorted) {
-            os << par.first << "," << par.second << "\n";
+            os << par.first << " , " << par.second << "\n";
         }
     }
 };

@@ -4,7 +4,7 @@
  * @brief Uma tabela hash com tratamento de colisao por enderecamento aberto - Estrutura de dados avancada - 2026.1
  * @version 0.2
  * @date 2026-06-04
- * * @copyright Copyright (c) 2026
+ * @copyright Copyright (c) 2026
  * */
 
 #ifndef OPEN_ADDRESSING_HASHTABLE_H
@@ -31,7 +31,8 @@ enum class Status {
 /**
  * @brief Classe que implementa uma tabela hash com tratamento de
  * colisao por enderecamento aberto (open addressing) usando sondagem linear.
- * * @tparam Key key type
+ * 
+ * @tparam Key key type
  * @tparam Value value type
  * @tparam Hash hash function type
  */
@@ -68,7 +69,8 @@ private:
 
     /**
      * @brief Retorna o menor numero primo maior ou igual a x. 
-     * * @param x := um numero nao negativo
+     * 
+     * @param x := um numero nao negativo
      * @return size_t := um numero primo
      */
     size_t get_next_prime(size_t x) {
@@ -84,25 +86,30 @@ private:
         }
     }
 
+
     /**
      * @brief Retorna um inteiro no intervalo [0 ... m_table_size-1].
-     * * @param k := um valor de chave do tipo Key
+     * 
+     * @param k := um valor de chave do tipo Key
      * @return size_t := um inteiro no intervalo [0 ... m_table_size-1]
      */
     size_t hash_code(const Key& k) const {
         return m_hashing(k) % m_table_size;
     }
 
+
     /**
      * @brief Calcula a posicao de sondagem linear na tabela.
      * h(k, i) = (h'(k) + i) % m_table_size
-     * * @param hash_inicial := valor do hash_code original
+     * 
+     * @param hash_inicial := valor do hash_code original
      * @param i := tentativa de sondagem
      * @return size_t := indice calculado
      */
     size_t linear_probe(size_t hash_inicial, size_t i) const {
         return (hash_inicial + i) % m_table_size;
     }
+
 
     /**
      * @brief Retorna um booleano indicando se a tabela hash precisa ser redimensionada.
@@ -112,9 +119,11 @@ private:
         return current_load > m_max_load_factor;
     }
 
+
     /**
      * @brief Funcao auxiliar de busca em enderecamento aberto.
-     * * @param k := chave a ser pesquisada
+     * 
+     * @param k := chave a ser pesquisada
      * @return long long := indice do elemento se encontrado, -1 caso contrario
      */
     long long aux_hash_search(const Key& k) const {
@@ -139,9 +148,11 @@ private:
         return -1;
     }
 
+
     /**
      * @brief Operacao de reconstrucao da tabela hash.
-     * * @param new_size := o novo tamanho base
+     * 
+     * @param new_size := o novo tamanho base
      */
     void rehash(size_t new_size) {
         size_t new_prime_size = get_next_prime(new_size);
@@ -164,7 +175,8 @@ private:
 public:
     /**
      * @brief Construtor: cria uma tabela hash com um numero primo de slots.
-     * * @param tableSize := o numero de slots da tabela. 
+     * 
+     * @param tableSize := o numero de slots da tabela. 
      * @param maxLoadFactor := fator de carga maximo
      */
     OpenAddressingHashTable(size_t tableSize = 19, float maxLoadFactor = 0.5f) {
@@ -210,7 +222,8 @@ public:
      * Caso a insercao seja feita, isso incrementa o 
      * numero de elementos da tabela em 1 unidade.
      * Retorna true se e somente se a insercao for feita. Retorna false se a chave ja existir.
-     * * @param k := chave
+     * 
+     * @param k := chave
      * @param v := valor 
      */
     bool insert(const Key& k, const Value& v) override {
@@ -260,7 +273,8 @@ public:
 
     /**
      * @brief Atualiza o valor de uma chave existente.
-     * * @param k := chave
+     * 
+     * @param k := chave
      * @param v := novo valor 
      */
     void update(const Key& k, const Value& v) override {
@@ -276,7 +290,8 @@ public:
     /**
      * @brief Recebe como entrada uma chave k e retorna true 
      * se e somente se a chave k estiver presente na tabela hash.
-     * * @param k := chave a ser pesquisada
+     * 
+     * @param k := chave a ser pesquisada
      */
     bool contains(const Key& k) const override {
         return aux_hash_search(k) != -1;
@@ -286,7 +301,8 @@ public:
     /**
      * @brief Retorna uma referencia para o valor associado a chave k.
      * Se k nao estiver na tabela, a funcao lanca uma out_of_range exception.
-     * * @param k := chave
+     * 
+     * @param k := chave
      * @return Value& := valor associado a chave
      */
     Value& at(const Key& k) override {
@@ -298,7 +314,8 @@ public:
 
     /**
      * @brief Versao const da funcao at()
-     * * @param k := chave
+     * 
+     * @param k := chave
      * @return const Value& := valor associado a chave
      */
     const Value& at(const Key& k) const override {
@@ -312,7 +329,8 @@ public:
      * @brief Remove da tabela hash o elemento com chave k se ele existir.
      * Ao remover o elemento, o numero de elementos eh decrementado em 1 unidade.
      * Retorna um booleano indicando se a remocao foi realizada.
-     * * @param k := chave a ser removida
+     * 
+     * @param k := chave a ser removida
      */
     bool remove(const Key& k) override {
         long long j = aux_hash_search(k);
@@ -353,10 +371,11 @@ public:
     void print_csv(std::ostream& os) const override {
         auto sorted = to_sorted_vector();
         for(const auto& par : sorted) {
-            os << par.first << "," << par.second << "\n";
+            os << par.first << " , " << par.second << "\n";
         }
     }
 
+    
     //=============================================================================
     /**
      * @brief Classe Iterator para a OpenAddressingHashTable
@@ -407,12 +426,14 @@ public:
             return current;
         }
 
-    }; // END of Iterator
+    }; 
+    // END of Iterator
     //=============================================================================
 
     /**
      * @brief Metodo da classe OpenAddressingHashTable que retorna um iterador para o inicio da tabela
-     * * @return Iterator 
+     * 
+     * @return Iterator 
      */
     Iterator iterator() {
         return Iterator(this);

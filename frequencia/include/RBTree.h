@@ -43,20 +43,20 @@ private:
      * O no sentinela NIL compartilhado evita verificacoes de nullptr.
      */
     struct Node {
-        Key    key;
-        Value  value;
-        Color  color;
-        Node*  left;
-        Node*  right;
-        Node*  parent;
+        Key key;
+        Value value;
+        Color color;
+        Node* left;
+        Node* right;
+        Node* parent;
 
         Node(const Key& k, const Value& v, Color c, Node* nil)
             : key(k), value(v), color(c), left(nil), right(nil), parent(nil) {}
     };
 
-    Node*   m_root;
-    Node*   m_nil;                
-    size_t  m_number_of_elements;
+    Node* m_root;
+    Node* m_nil;                
+    size_t m_number_of_elements;
     mutable Metrics m_metrics;
 
     // Rotacoes (O(1))
@@ -115,9 +115,9 @@ private:
      * Sobe pela arvore iterativamente verificando violacoes.
      *
      * Tres casos simetricos (esquerda / direita):
-     *  Caso 1: tio vermelho         => recolorir tio, pai e avo; subir para o avo.
-     *  Caso 2: tio preto, joelho    => rotacionar o pai; cair no Caso 3.
-     *  Caso 3: tio preto, linha     => recolorir pai e avo; rotacionar o avo.
+     *  Caso 1: tio vermelho        => recolorir tio, pai e avo; subir para o avo.
+     *  Caso 2: tio preto, joelho   => rotacionar o pai; cair no Caso 3.
+     *  Caso 3: tio preto, linha    => recolorir pai e avo; rotacionar o avo.
      *
      * @param z no recem-inserido (vermelho)
      */
@@ -130,8 +130,8 @@ private:
 
                 // Caso 1
                 if (y->color == Color::RED) {
-                    z->parent->color         = Color::BLACK;
-                    y->color                 = Color::BLACK;
+                    z->parent->color = Color::BLACK;
+                    y->color = Color::BLACK;
                     z->parent->parent->color = Color::RED;
                     z = z->parent->parent;
                 } else {
@@ -143,7 +143,7 @@ private:
                     }
 
                     // Caso 3
-                    z->parent->color         = Color::BLACK;   
+                    z->parent->color = Color::BLACK;   
                     z->parent->parent->color = Color::RED;
                     right_rotate(z->parent->parent);
                 }
@@ -155,8 +155,8 @@ private:
 
                 // Caso 1
                 if (y->color == Color::RED) {           
-                    z->parent->color         = Color::BLACK;
-                    y->color                 = Color::BLACK;
+                    z->parent->color = Color::BLACK;
+                    y->color = Color::BLACK;
                     z->parent->parent->color = Color::RED;
                     z = z->parent->parent;
                 } else {
@@ -168,7 +168,7 @@ private:
                     }
 
                     // Caso 3
-                    z->parent->color         = Color::BLACK;   
+                    z->parent->color = Color::BLACK;   
                     z->parent->parent->color = Color::RED;
                     left_rotate(z->parent->parent);
                 }
@@ -183,9 +183,9 @@ private:
      */
     void transplant(Node* u, Node* v) {
         if (u->parent == m_nil)
-            m_root           = v;
+            m_root = v;
         else if (u == u->parent->left)
-            u->parent->left  = v;
+            u->parent->left = v;
         else
             u->parent->right = v;
         v->parent = u->parent;
@@ -210,14 +210,14 @@ private:
 
                 // Caso 1
                 if (w->color == Color::RED) { 
-                    w->color         = Color::BLACK;
+                    w->color = Color::BLACK;
                     x->parent->color = Color::RED;
                     left_rotate(x->parent);
                     w = x->parent->right;
                 }
 
                 // Caso 2
-                if (w->left->color  == Color::BLACK &&
+                if (w->left->color == Color::BLACK &&
                     w->right->color == Color::BLACK) {    
                     w->color = Color::RED;
                     x = x->parent;
@@ -226,15 +226,15 @@ private:
                     // Caso 3
                     if (w->right->color == Color::BLACK) { 
                         w->left->color = Color::BLACK;
-                        w->color       = Color::RED;
+                        w->color = Color::RED;
                         right_rotate(w);
                         w = x->parent->right;
                     }
 
                     // Caso 4
-                    w->color         = x->parent->color;  
+                    w->color = x->parent->color;  
                     x->parent->color = Color::BLACK;
-                    w->right->color  = Color::BLACK;
+                    w->right->color = Color::BLACK;
                     left_rotate(x->parent);
                     x = m_root;
                 }
@@ -243,7 +243,7 @@ private:
 
                 // Caso 1
                 if (w->color == Color::RED) {             
-                    w->color         = Color::BLACK;
+                    w->color = Color::BLACK;
                     x->parent->color = Color::RED;
                     right_rotate(x->parent);
                     w = x->parent->left;
@@ -251,7 +251,7 @@ private:
 
                 // Caso 2
                 if (w->right->color == Color::BLACK &&
-                    w->left->color  == Color::BLACK) {    
+                    w->left->color == Color::BLACK) {    
                     w->color = Color::RED;
                     x = x->parent;
                 } else {
@@ -259,15 +259,15 @@ private:
                     // Caso 3
                     if (w->left->color == Color::BLACK) { 
                         w->right->color = Color::BLACK;
-                        w->color        = Color::RED;
+                        w->color = Color::RED;
                         left_rotate(w);
                         w = x->parent->left;
                     }
 
                     // Caso 4
-                    w->color         = x->parent->color;  
+                    w->color = x->parent->color;  
                     x->parent->color = Color::BLACK;
-                    w->left->color   = Color::BLACK;
+                    w->left->color = Color::BLACK;
                     right_rotate(x->parent);
                     x = m_root;
                 }
@@ -313,11 +313,11 @@ public:
      * Inicializa o sentinela NIL e a raiz.
      */
     RBTree() : m_number_of_elements(0) {
-        m_nil         = new Node(Key{}, Value{}, Color::BLACK, nullptr);
-        m_nil->left   = m_nil;
-        m_nil->right  = m_nil;
+        m_nil = new Node(Key{}, Value{}, Color::BLACK, nullptr);
+        m_nil->left = m_nil;
+        m_nil->right = m_nil;
         m_nil->parent = m_nil;
-        m_root        = m_nil;
+        m_root = m_nil;
     }
 
 
@@ -414,7 +414,7 @@ public:
             y->right = z;
         }
 
-        // 3. Correcao das propriedades RN (iterativo)
+        // 3. Correcao das propriedades RB
         insert_fixup(z);
         return true;
     }
@@ -436,7 +436,8 @@ public:
 
 
     /**
-     * Retorna true se a chave estiver presente.
+     * @brief Retorna true se a chave estiver presente.
+     * 
      * @param k chave a ser pesquisada
      */
     bool contains(const Key& k) const override {
@@ -511,13 +512,13 @@ public:
                 x->parent = y;             
             } else {
                 transplant(y, y->right);
-                y->right         = z->right;
+                y->right = z->right;
                 y->right->parent = y;
             }
             transplant(z, y);
-            y->left         = z->left;
+            y->left = z->left;
             y->left->parent = y;
-            y->color        = z->color;
+            y->color = z->color;
         }
 
         delete z;
@@ -555,14 +556,6 @@ public:
     }
 
 
-    // Metodos de bucket nao se aplicam a arvores — retornam valores neutros
-    size_t bucket_count() const override { return 0; }
-    size_t bucket_size(size_t) const override { throw std::out_of_range("RBTree: sem buckets"); }
-    size_t bucket(const Key&) const override { return 0; }
-    float  load_factor() const override { return 0.0f; }
-    float  max_load_factor() const override { return 0.0f; }
-
-
     const Metrics& metrics() const override {
         return m_metrics;
     }
@@ -576,12 +569,11 @@ public:
     void print_csv(std::ostream& os) const override {
         auto sorted = to_sorted_vector();
         for (const auto& par : sorted) {
-            os << par.first << "," << par.second << "\n";
+            os << par.first << "  ,  " << par.second << "\n";
         }
     }
 
 
-    //=============================================================================
     /**
      * @brief Classe Iterator para a RBTree.
      * Permite navegar In-Order pelos elementos sem recursao.
@@ -590,7 +582,7 @@ public:
     class Iterator {
     private:
         RBTree* m_tree;
-        std::vector<Node*>  m_stack;
+        std::vector<Node*> m_stack;
 
         /**
          * @brief Desce pelo caminho mais a esquerda empilhando os nos.
@@ -633,7 +625,8 @@ public:
             return result;
         }
 
-    }; // END of Iterator
+    }; 
+    // END of Iterator
     //=============================================================================
 
 
