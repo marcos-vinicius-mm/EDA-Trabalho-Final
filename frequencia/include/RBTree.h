@@ -531,6 +531,44 @@ public:
         return true;
     }
 
+    /**
+     * @brief Retorna um vetor ordenado usando travessia In-Order iterativa.
+     * Utiliza uma simulacao de pilha para evitar recursao.
+     */
+    std::vector<std::pair<Key,Value>> to_sorted_vector() const override {
+        std::vector<std::pair<Key,Value>> vec;
+        std::vector<Node*> stack;
+        Node* curr = m_root;
+
+        while (curr != m_nil || !stack.empty()) {
+            while (curr != m_nil) {
+                stack.push_back(curr);
+                curr = curr->left;
+            }
+            curr = stack.back();
+            stack.pop_back();
+
+            vec.push_back({curr->key, curr->value});
+            curr = curr->right;
+        }
+        return vec;
+    }
+
+    const Metrics& metrics() const override {
+        return m_metrics;
+    }
+
+    void reset_metrics() override {
+        m_metrics.reset();
+    }
+
+    void print_csv(std::ostream& os) const override {
+        auto sorted = to_sorted_vector();
+        for (const auto& par : sorted) {
+            os << par.first << "," << par.second << "\n";
+        }
+    }
+
 
     /**
      * @brief Classe Iterator para percurso In-Order.
