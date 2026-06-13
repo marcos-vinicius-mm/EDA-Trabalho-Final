@@ -371,73 +371,57 @@ public:
     void print_csv(std::ostream& os) const override {
         auto sorted = to_sorted_vector();
         for(const auto& par : sorted) {
-            os << par.first << " , " << par.second << "\n";
+            os << par.first << "," << par.second << "\n";
         }
     }
 
     
-    //=============================================================================
     /**
      * @brief Classe Iterator para a OpenAddressingHashTable
      * Permite navegar sequencialmente pelos elementos ativos da tabela.
      */
     class Iterator {
-    private: 
-        OpenAddressingHashTable* m_hash_table;
+    private:
+        const OpenAddressingHashTable* m_hash_table;
         size_t m_index;
 
-        /**
-         * @brief Avanca o indice ate encontrar um slot ACTIVE ou chegar ao fim da tabela
-         */
         void advance_to_valid_element() {
-            while(m_index < m_hash_table->m_table_size && 
-                  m_hash_table->m_table[m_index].status != Status::ACTIVE) {
+            while (m_index < m_hash_table->m_table_size && 
+                   m_hash_table->m_table[m_index].status != Status::ACTIVE) {
                 ++m_index;
             }
         }
 
     public:
-        /**
-         * @brief Construtor do iterador
-         */
-        Iterator(OpenAddressingHashTable* table) {
-            m_hash_table = table;
-            m_index = 0;
-            advance_to_valid_element();
-        }
-
-        /**
-         * @brief Retorna true se ainda existe um proximo elemento ativo
-         */
-        bool hasNext() const {
-            return m_index < m_hash_table->m_table_size;
-        }
-
-        /**
-         * @brief Retorna o par (chave, valor) atual e avanca para o proximo
-         */
-        std::pair<Key, Value> next() {
-            if(!hasNext()) {
-                throw std::out_of_range("no more elements");
+        Iterator(const OpenAddressingHashTable* table, size_t start_index) : m_hash_table(table), m_index(start_index) {
+            if (m_index < m_hash_table->m_table_size) {
+                advance_to_valid_element();
             }
-            std::pair<Key, Value> current = {m_hash_table->m_table[m_index].key, m_hash_table->m_table[m_index].value};
+        }
+
+        std::pair<Key, Value> operator*() {
+            return {m_hash_table->m_table[m_index].key, m_hash_table->m_table[m_index].value};
+        }
+
+        Iterator& operator++() {
             ++m_index;
             advance_to_valid_element();
-            return current;
+            return *this;
         }
 
-    }; 
-    // END of Iterator
-    //=============================================================================
+        bool operator!=(const Iterator& other) const {
+            return m_index != other.m_index;
+        }
+    };
 
-    /**
-     * @brief Metodo da classe OpenAddressingHashTable que retorna um iterador para o inicio da tabela
-     * 
-     * @return Iterator 
-     */
-    Iterator iterator() {
-        return Iterator(this);
+    Iterator begin() const {
+        return Iterator(this, 0);
     }
+
+    Iterator end() const {
+        return Iterator(this, m_table_size);
+    }
+    // END of Iterator
 };
 
 #endif // OPEN_ADDRESSING_HASHTABLE_H

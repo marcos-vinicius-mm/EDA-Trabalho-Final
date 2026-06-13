@@ -450,9 +450,58 @@ public:
     void print_csv(std::ostream& os) const override {
         auto sorted = to_sorted_vector();
         for (const auto& par : sorted) {
-            os << par.first << " , " << par.second << "\n";
+            os << par.first << "," << par.second << "\n";
         }
     }
+
+    /**
+     * @brief Classe Iterator para percurso In-Order.
+     */
+    class Iterator {
+    private:
+        const AVLTree* m_tree;
+        std::vector<Node*> m_stack;
+
+        void push_left(Node* node) {
+            while (node != nullptr) {
+                m_stack.push_back(node);
+                node = node->left;
+            }
+        }
+
+    public:
+        Iterator(const AVLTree* tree, Node* root) : m_tree(tree) {
+            if (root != nullptr) {
+                push_left(root);
+            }
+        }
+
+        std::pair<Key, Value> operator*() {
+            return {m_stack.back()->key, m_stack.back()->value};
+        }
+
+        Iterator& operator++() {
+            Node* current = m_stack.back();
+            m_stack.pop_back();
+            push_left(current->right);
+            return *this;
+        }
+
+        bool operator!=(const Iterator& other) const {
+            if (m_stack.empty() && other.m_stack.empty()) return false;
+            if (m_stack.empty() != other.m_stack.empty()) return true;
+            return m_stack.back() != other.m_stack.back();
+        }
+    };
+
+    Iterator begin() {
+        return Iterator(this, m_root);
+    }
+
+    Iterator end() {
+        return Iterator(this, nullptr);
+    }
+
 };
 
 #endif // AVL_TREE_H

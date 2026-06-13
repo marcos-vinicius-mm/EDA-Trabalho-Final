@@ -441,78 +441,64 @@ public:
     void print_csv(std::ostream& os) const override {
         auto sorted = to_sorted_vector();
         for(const auto& par : sorted) {
-            os << par.first << " , " << par.second << "\n";
+            os << par.first << "," << par.second << "\n";
         }
     }
 
     
-    //=============================================================================
     /**
      * @brief Classe Iterator para a ChainedHashTable
-     * Um iterador eh um objeto que nos permite navegar pelos elementos da estrutura de dados.
+     * Permite navegar pelos elementos da estrutura de dados.
      * Todo iterador eh invalidado por operacoes de rehash().
      */
     class Iterator {
-    private: 
-        ChainedHashTable* m_hash_table;
+    private:
+        const ChainedHashTable* m_hash_table;
         size_t m_bucket;
-        typename std::list<std::pair<Key,Value>>::iterator m_list_it;
+        typename std::list<std::pair<Key, Value>>::const_iterator m_list_it;
 
-        /**
-         * @brief Avanca ate o proximo bucket nao vazio
-         */
         void advance_to_valid_bucket() {
-            while(m_bucket < m_hash_table->m_table_size && m_list_it == m_hash_table->m_table[m_bucket].end()) {
+            while (m_bucket < m_hash_table->m_table_size && m_list_it == m_hash_table->m_table[m_bucket].end()) {
                 ++m_bucket;
-                if(m_bucket < m_hash_table->m_table_size) {
+                if (m_bucket < m_hash_table->m_table_size) {
                     m_list_it = m_hash_table->m_table[m_bucket].begin();
                 }
             }
         }
+
     public:
-        /**
-         * @brief Construtor do iterador
-         */
-        Iterator(ChainedHashTable* table)  {
-            m_hash_table = table;
-            m_bucket = 0;
-            if(m_hash_table->m_table_size > 0) {
-                m_list_it = m_hash_table->m_table[0].begin();
+        Iterator(const ChainedHashTable* table, size_t start_bucket) : m_hash_table(table), m_bucket(start_bucket) {
+            if (m_bucket < m_hash_table->m_table_size) {
+                m_list_it = m_hash_table->m_table[m_bucket].begin();
+                advance_to_valid_bucket();
             }
-            advance_to_valid_bucket();
         }
 
-        /**
-         * @brief Retorna true se ainda existe proximo elemento
-         */
-        bool hasNext() const {
-            return m_bucket < m_hash_table->m_table_size;
+        std::pair<Key, Value> operator*() const {
+            return *m_list_it;
         }
 
-        const std::pair<Key,Value>& next() {
-            if(!hasNext()) {
-                throw std::out_of_range("no more elements");
-            }
-            auto& current = *m_list_it;
+        Iterator& operator++() {
             ++m_list_it;
             advance_to_valid_bucket();
-            return current;
+            return *this;
         }
 
-    }; 
-    // END of Iterator
-    //=============================================================================
+        bool operator!=(const Iterator& other) const {
+            if (m_bucket != other.m_bucket) return true;
+            if (m_bucket == m_hash_table->m_table_size) return false;
+            return m_list_it != other.m_list_it;
+        }
+    };
 
-
-    /**
-     * @brief Metodo da classe ChainedHashTable que retorna um iterador para o inicio da tabela
-     * 
-     * @return Iterator 
-     */
-    Iterator iterator() {
-        return Iterator(this);
+    Iterator begin() const {
+        return Iterator(this, 0);
     }
 
+    Iterator end() const {
+        return Iterator(this, m_table_size);
+    } 
+    // END of Iterator
 };
 
 #endif // END of CHAINED_HASHTABLE_H
