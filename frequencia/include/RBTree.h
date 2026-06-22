@@ -531,7 +531,6 @@ public:
         return true;
     }
 
-
     /**
      * @brief Retorna um vetor ordenado usando travessia In-Order iterativa.
      * Utiliza uma simulacao de pilha para evitar recursao.
@@ -555,38 +554,30 @@ public:
         return vec;
     }
 
-
     const Metrics& metrics() const override {
         return m_metrics;
     }
-
 
     void reset_metrics() override {
         m_metrics.reset();
     }
 
-
     void print_csv(std::ostream& os) const override {
         auto sorted = to_sorted_vector();
         for (const auto& par : sorted) {
-            os << par.first << "  ,  " << par.second << "\n";
+            os << par.first << "," << par.second << "\n";
         }
     }
 
 
     /**
-     * @brief Classe Iterator para a RBTree.
-     * Permite navegar In-Order pelos elementos sem recursao.
-     * Todo iterador e invalidado por operacoes de insert() ou remove().
+     * @brief Classe Iterator para percurso In-Order.
      */
     class Iterator {
     private:
-        RBTree* m_tree;
+        const RBTree* m_tree;
         std::vector<Node*> m_stack;
 
-        /**
-         * @brief Desce pelo caminho mais a esquerda empilhando os nos.
-         */
         void push_left(Node* node) {
             while (node != m_tree->m_nil) {
                 m_stack.push_back(node);
@@ -595,49 +586,38 @@ public:
         }
 
     public:
-        /**
-         * @brief Construtor do iterador: posiciona no menor elemento.
-         */
-        Iterator(RBTree* tree) : m_tree(tree) {
-            push_left(m_tree->m_root);
+        Iterator(const RBTree* tree, Node* root) : m_tree(tree) {
+            if (root != m_tree->m_nil) {
+                push_left(root);
+            }
         }
 
-        /**
-         * @brief Retorna true se ainda existe proximo elemento.
-         */
-        bool hasNext() const {
-            return !m_stack.empty();
+        std::pair<Key, Value> operator*() {
+            return {m_stack.back()->key, m_stack.back()->value};
         }
 
-        /**
-         * @brief Retorna o par (chave, valor) atual e avanca para o proximo In-Order.
-         */
-        std::pair<Key, Value> next() {
-            if (!hasNext())
-                throw std::out_of_range("no more elements");
-
+        Iterator& operator++() {
             Node* current = m_stack.back();
             m_stack.pop_back();
-
-            std::pair<Key, Value> result = {current->key, current->value};
-
             push_left(current->right);
-            return result;
+            return *this;
         }
 
-    }; 
-    // END of Iterator
-    //=============================================================================
+        bool operator!=(const Iterator& other) const {
+            if (m_stack.empty() && other.m_stack.empty()) return false;
+            if (m_stack.empty() != other.m_stack.empty()) return true;
+            return m_stack.back() != other.m_stack.back();
+        }
+    };
 
-
-    /**
-     * @brief Retorna um iterador para o inicio da arvore (menor elemento).
-     *
-     * @return Iterator
-     */
-    Iterator iterator() {
-        return Iterator(this);
+    Iterator begin() {
+        return Iterator(this, m_root);
     }
+
+    Iterator end() {
+        return Iterator(this, m_nil);
+    }
+    // END of Iterator
 };
 
 #endif // RB_TREE_H

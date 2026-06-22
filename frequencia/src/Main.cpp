@@ -36,7 +36,6 @@
 #include "../include/OpenAddressingHashTable.h"
 
 
-// ============================================================
 // Tokenizacao do arquivo de entrada
 
 /**
@@ -119,7 +118,7 @@ static std::vector<std::string> tokenize(const std::string& filename) {
             }
 
             // Pontuacao ASCII nao-letra e nao-hifen: separador
-            if (!sep && !std::isalpha(c) && c < 128 && c != '-' && c != '\'')
+            if (!sep && !std::isalpha(c) && c < 128 && c != '-')
                 sep = true;
 
             if (!sep) {
@@ -138,7 +137,6 @@ static std::vector<std::string> tokenize(const std::string& filename) {
 }
 
 
-// ============================================================
 // Construcao da tabela de frequencias
 
 /**
@@ -159,7 +157,6 @@ static void build_frequency(Dictionary<std::string, int>& dict,
 }
 
 
-// ============================================================
 // Exibição de métricas
 
 /**
@@ -193,7 +190,6 @@ static void print_metrics(const std::string& name,
 }
 
 
-// ============================================================
 // Escrita do CSV de saida
 
 /**
@@ -217,7 +213,6 @@ static bool write_csv(Dictionary<std::string, int>& dict,
 }
 
 
-// ============================================================
 // Fabrica de dicionarios e nomes amigaveis
 
 using DictPtr = std::unique_ptr<Dictionary<std::string, int>>;
@@ -245,7 +240,6 @@ static std::string friendly_name(const std::string& type) {
 }
 
 
-// ============================================================
 // Execução de uma estrutura
 
 /**
@@ -283,7 +277,6 @@ static void run_structure(const std::string& type,
 }
 
 
-// ============================================================
 // Ajuda
 
 static void print_help(const char* prog) {
@@ -308,7 +301,6 @@ static void print_help(const char* prog) {
 }
 
 
-// ============================================================
 // main
 
 int main(int argc, char* argv[]) {
