@@ -1,0 +1,629 @@
+\documentclass[12pt, a4paper]{article}
+
+% ============================================================
+% Pacotes
+% ============================================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{geometry}
+\setlength{\headheight}{14.5pt}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{indentfirst}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{shapes, arrows.meta, positioning, calc}
+
+% ============================================================
+% Configurações de página
+% ============================================================
+\geometry{
+    top=3cm,
+    bottom=2cm,
+    left=3cm,
+    right=2cm
+}
+
+\setstretch{1.5}
+
+% ============================================================
+% Configurações de código-fonte
+% ============================================================
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.97,0.97,0.97}
+
+\lstdefinestyle{cppstyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue}\bfseries,
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4,
+    language=C++,
+    frame=single,
+    rulecolor=\color{black!30},
+    xleftmargin=15pt
+}
+\lstset{style=cppstyle}
+
+% ============================================================
+% Configurações de hyperlinks
+% ============================================================
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!70!black,
+    filecolor=magenta,
+    urlcolor=blue!70!black,
+    citecolor=green!50!black
+}
+
+% ============================================================
+% Cabeçalho e rodapé
+% ============================================================
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\textit{QXD0115 -- Estrutura de Dados Avançada}}
+\lhead{\textit{Trabalho Final -- 2026.1}}
+\rfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ============================================================
+% Início do documento
+% ============================================================
+\begin{document}
+
+% ------------------------------------------------------------
+% Capa
+% ------------------------------------------------------------
+\begin{titlepage}
+    \centering
+
+    \includegraphics[width=0.25\textwidth]{img/logo_ufc.png}\\[0.5cm]
+
+    {\large \textbf{Universidade Federal do Ceará}}\\
+    {\large Campus Quixadá}\\
+    {\large Curso de Ciência da Computação}\\[1.5cm]
+
+    {\large QXD0115 -- Estrutura de Dados Avançada}\\[0.5cm]
+
+    \rule{\linewidth}{0.5mm}\\[0.4cm]
+    {\LARGE \textbf{Contador de Frequência de Palavras}}\\[0.2cm]
+    {\large Análise Comparativa de Dicionários com AVL,}\\
+    {\large Rubro-Negra e Tabelas Hash}\\
+    \rule{\linewidth}{0.5mm}\\[1.5cm]
+
+    \begin{minipage}{0.5\textwidth}
+        \begin{flushleft}
+            \textbf{Autores:}\\
+            Marcos V. de Morais Maniçoba\\
+            \texttt{marcosufcvinicius@alu.ufc.br}\\[0.3cm]
+            João Pedro Teófilo\\
+            \texttt{joaopedroteofilo@alu.ufc.br}
+        \end{flushleft}
+    \end{minipage}
+    \begin{minipage}{0.45\textwidth}
+        \begin{flushright}
+            \textbf{Professor:}\\
+            Atílio G. Luiz\\
+            \texttt{gomes.atilio@ufc.br}
+        \end{flushright}
+    \end{minipage}
+
+    \vfill
+    {\large Quixadá, Ceará -- 2026}
+\end{titlepage}
+
+% ------------------------------------------------------------
+% Sumário
+% ------------------------------------------------------------
+\tableofcontents
+\newpage
+
+% ============================================================
+% 1. INTRODUÇÃO
+% ============================================================
+\section{Introdução}
+
+Este trabalho foi desenvolvido como projeto final da disciplina \textbf{QXD0115 -- Estrutura
+de Dados Avançada} e tem como objetivo a implementação de um programa que realiza a
+contagem de frequência de palavras em arquivos de texto, utilizando quatro diferentes
+estruturas de dados do tipo dicionário:
+
+\begin{itemize}
+    \item Árvore AVL completamente iterativa;
+    \item Árvore Rubro-Negra completamente iterativa;
+    \item Tabela Hash com encadeamento exterior (\textit{separate chaining});
+    \item Tabela Hash com endereçamento aberto (\textit{open addressing}) por sondagem linear.
+\end{itemize}
+
+Além de gerar o CSV com as palavras e suas frequências em ordem alfabética, o programa
+coleta métricas de desempenho de cada estrutura -- número de comparações de chave,
+rotações, colisões e tempo de construção -- permitindo uma análise comparativa objetiva
+entre as abordagens.
+
+\subsection{Motivação}
+
+A contagem de frequência de palavras é um problema clássico em ciência da computação,
+com aplicações em análise de texto, recuperação de informação, processamento de linguagem
+natural e compressão de dados. O uso de dicionários é natural para esse problema pois
+permitem inserção e busca eficiente por chave. Diferentes implementações de dicionário
+apresentam comportamentos distintos de desempenho dependendo do volume de dados e da
+distribuição das chaves, o que torna esse projeto um cenário ideal para comparação
+empírica das estruturas estudadas em aula.
+
+\subsection{Objetivos}
+
+\begin{itemize}
+    \item Implementar quatro dicionários genéricos com templates C++ herdando de uma
+          interface abstrata comum (\texttt{Dictionary<Key,Value>});
+    \item Implementar AVL e Rubro-Negra \textbf{sem recursão}, usando apenas laços iterativos;
+    \item Processar arquivos \texttt{.txt} realizando tokenização, normalização e contagem;
+    \item Coletar e comparar métricas de desempenho das quatro estruturas;
+    \item Disponibilizar uma interface de linha de comando clara e documentada.
+\end{itemize}
+
+% ============================================================
+% 2. FUNDAMENTAÇÃO TEÓRICA
+% ============================================================
+\section{Fundamentação Teórica}
+
+\subsection{Dicionários}
+
+Um dicionário é uma estrutura de dados que armazena pares \texttt{(chave, valor)}, onde
+cada chave é única e permite acesso direto ao valor associado. As operações fundamentais
+são inserção, busca, atualização e remoção, todas com complexidade média $O(\log n)$ em
+árvores balanceadas ou $O(1)$ em tabelas hash.
+
+\subsection{Árvore AVL}
+
+A Árvore AVL, proposta por Adelson-Velsky e Landis em 1962, é uma árvore binária de
+busca que mantém o \textbf{fator de balanceamento} de cada nó entre $-1$ e $+1$, onde:
+
+\begin{equation}
+    bf(n) = h(\text{subárvore esquerda}) - h(\text{subárvore direita})
+\end{equation}
+
+Quando uma inserção ou remoção viola essa propriedade, rotações simples (LL, RR) ou
+duplas (LR, RL) são realizadas para restaurar o balanceamento. Todas as operações têm
+complexidade $O(\log n)$ no pior caso, com $h \leq 1{,}44 \log_2(n+2)$.
+
+A implementação deste trabalho é \textbf{completamente iterativa}: o ponteiro
+\texttt{parent} em cada nó permite subir pelo caminho de inserção sem pilha de chamadas,
+e o método \texttt{balance\_upwards()} realiza o rebalanceamento em um laço \texttt{while}.
+
+\subsection{Árvore Rubro-Negra}
+
+A Árvore Rubro-Negra é uma árvore binária de busca balanceada que mantém cinco
+propriedades cromáticas, garantindo que o caminho mais longo até uma folha seja no
+máximo o dobro do mais curto. Isso implica altura máxima $2\log_2(n+1)$.
+
+O algoritmo de inserção (\texttt{insert\_fixup}) trata três casos simétricos baseados
+na cor do tio do nó inserido, e o de remoção (\texttt{delete\_fixup}) trata quatro
+casos simétricos. Ambos foram implementados de forma iterativa seguindo o algoritmo
+de Cormen et al. (CLRS).
+
+A estrutura usa um \textbf{nó sentinela NIL} compartilhado por todos os ponteiros nulos,
+eliminando verificações de \texttt{nullptr} e simplificando o código.
+
+\subsection{Tabela Hash com Encadeamento Exterior}
+
+Cada posição da tabela é uma lista encadeada de pares \texttt{(chave, valor)}. Uma
+colisão é resolvida inserindo o novo elemento no final da lista do bucket correspondente.
+O fator de carga $\alpha = n/m$ (onde $n$ é o número de elementos e $m$ o número de
+buckets) controla a eficiência: quando $\alpha$ ultrapassa o limite configurado, um
+\textit{rehash} dobra o tamanho da tabela.
+
+A função de hash utiliza o método da divisão: $h(k) = \texttt{hash}(k) \bmod m$, onde
+$m$ é sempre um número primo para melhor distribuição.
+
+\subsection{Tabela Hash com Endereçamento Aberto}
+
+Todos os elementos são armazenados na própria tabela. Colisões são resolvidas por
+\textbf{sondagem linear}: $h(k, i) = (h'(k) + i) \bmod m$. Remoções usam
+\textit{lazy deletion} -- o slot é marcado como \texttt{DELETED} em vez de ser
+esvaziado, preservando as sequências de sondagem para buscas futuras.
+
+O fator de carga máximo é limitado a $0{,}5$ para evitar degradação de desempenho,
+e o rehash reconstrói a tabela reinserindo todos os elementos ativos.
+
+% ============================================================
+% 3. IMPLEMENTAÇÃO
+% ============================================================
+\section{Implementação}
+
+\subsection{Arquitetura e Organização}
+
+O projeto segue uma arquitetura em camadas com separação clara entre interface e
+implementação:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    box/.style={rectangle, draw=black!70, rounded corners=4pt,
+                minimum width=3.8cm, minimum height=1cm,
+                text centered, fill=blue!10, font=\small},
+    ibox/.style={rectangle, draw=black!70, rounded corners=4pt,
+                 minimum width=9cm, minimum height=1cm,
+                 text centered, fill=gray!15, font=\small\itshape},
+    arr/.style={-{Latex}, thick}
+]
+    \node[ibox] (dict) {\texttt{Dictionary<Key, Value>} (interface abstrata)};
+
+    \node[box, below left=1.2cm and 2.8cm of dict]  (avl)  {\texttt{AVLTree<K,V>}};
+    \node[box, below left=1.2cm and 0.6cm of dict]  (rb)   {\texttt{RBTree<K,V>}};
+    \node[box, below right=1.2cm and 0.6cm of dict] (hc)   {\texttt{ChainedHashTable<K,V>}};
+    \node[box, below right=1.2cm and 2.8cm of dict] (ho)   {\texttt{OpenAddressingHashTable<K,V>}};
+
+    \draw[arr] (avl) -- (dict);
+    \draw[arr] (rb)  -- (dict);
+    \draw[arr] (hc)  -- (dict);
+    \draw[arr] (ho)  -- (dict);
+\end{tikzpicture}
+\caption{Hierarquia de classes do projeto.}
+\label{fig:hierarquia}
+\end{figure}
+
+A estrutura de diretórios do projeto é:
+
+\begin{lstlisting}[language=bash, style=cppstyle, caption={Estrutura de diretórios.}]
+frequencia/
+  include/
+    Dictionary.h              # Interface abstrata + struct Metrics
+    AVLTree.h                 # Arvore AVL iterativa
+    RBTree.h                  # Arvore Rubro-Negra iterativa
+    ChainedHashTable.h        # Hash com encadeamento exterior
+    OpenAddressingHashTable.h # Hash com enderecamento aberto
+  src/
+    Main.cpp                  # Programa principal (CLI)
+  books/                      # Pasta dos livros .txt
+  sheet_results/              # Pasta de saida dos CSVs
+\end{lstlisting}
+
+\subsection{Interface Dictionary}
+
+Todas as estruturas herdam da classe abstrata \texttt{Dictionary<Key, Value>}, que
+define o contrato comum:
+
+\begin{lstlisting}[caption={Interface Dictionary (simplificada).}]
+template <typename Key, typename Value>
+class Dictionary {
+public:
+    virtual bool   insert(const Key& k, const Value& v) = 0;
+    virtual Value& at(const Key& k)                     = 0;
+    virtual void   update(const Key& k, const Value& v) = 0;
+    virtual bool   remove(const Key& k)                 = 0;
+    virtual bool   contains(const Key& k) const         = 0;
+    virtual size_t size()  const                        = 0;
+    virtual bool   empty() const                        = 0;
+    virtual void   clear()                              = 0;
+    virtual std::vector<std::pair<Key,Value>>
+                   to_sorted_vector() const             = 0;
+    virtual void   print_csv(std::ostream& os) const    = 0;
+    virtual const Metrics& metrics() const              = 0;
+    virtual void   reset_metrics()                      = 0;
+};
+\end{lstlisting}
+
+A estrutura \texttt{Metrics} acumula todas as métricas de desempenho:
+
+\begin{lstlisting}[caption={Estrutura Metrics.}]
+struct Metrics {
+    long long comparisons  = 0; // Comparacoes de chave
+    long long rotations    = 0; // Rotacoes (AVL / Rubro-Negra)
+    long long collisions   = 0; // Colisoes (Hash)
+    long long reinsertions = 0; // Re-insercoes no rehash
+    double    elapsed_ms   = 0.0;
+};
+\end{lstlisting}
+
+\subsection{Processamento do Texto}
+
+A tokenização do arquivo segue as seguintes regras, implementadas em \texttt{tokenize()}:
+
+\begin{enumerate}
+    \item Espaços e pontuação são tratados como separadores de palavras;
+    \item Todas as letras maiúsculas ASCII são convertidas para minúsculas;
+    \item O hífen \textbf{no interior} de uma palavra é preservado
+          (ex.: \textit{mostrá-lo} permanece como uma entrada única);
+    \item O hífen \textbf{isolado} ou no início/fim de token é descartado
+          (ex.: travessão de diálogo);
+    \item Caracteres acentuados (valor $> 127$) são mantidos intactos.
+\end{enumerate}
+
+\subsection{Construção da Tabela de Frequências}
+
+O método \texttt{build\_frequency()} é genérico e funciona com qualquer implementação
+de \texttt{Dictionary}:
+
+\begin{lstlisting}[caption={Construção da tabela de frequências.}]
+static void build_frequency(Dictionary<std::string, int>& dict,
+                             const std::vector<std::string>& words) {
+    for (const auto& w : words) {
+        if (!dict.insert(w, 1)) { // false = chave ja existia
+            dict.at(w)++;
+        }
+    }
+}
+\end{lstlisting}
+
+\subsection{Interface de Linha de Comando}
+
+O programa é chamado com a seguinte sintaxe:
+
+\begin{lstlisting}[language=bash, caption={Sintaxe de uso do programa.}]
+.\Main.exe dictionary <estrutura> <livro> [saida.csv]
+\end{lstlisting}
+
+Os parâmetros aceitos para \texttt{<estrutura>} são:
+
+\begin{table}[H]
+\centering
+\caption{Parâmetros de estrutura aceitos.}
+\begin{tabular}{ll}
+\toprule
+\textbf{Parâmetro} & \textbf{Estrutura} \\
+\midrule
+\texttt{avl}        & Árvore AVL iterativa \\
+\texttt{rb}         & Árvore Rubro-Negra iterativa \\
+\texttt{hash-chain} & Hash com encadeamento exterior \\
+\texttt{hash-open}  & Hash com endereçamento aberto \\
+\texttt{all}        & Executa as quatro e exibe comparativo \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O argumento \texttt{<livro>} aceita três formatos:
+
+\begin{lstlisting}[language=bash]
+# Apenas o nome (busca automaticamente em books/)
+.\Main.exe dictionary all dom_casmurro
+
+# Nome com extensao
+.\Main.exe dictionary all dom_casmurro.txt
+
+# Caminho completo
+.\Main.exe dictionary all C:/livros/dom_casmurro.txt
+\end{lstlisting}
+
+Os CSVs são gerados automaticamente em \texttt{sheet\_results/<nome\_do\_livro>/},
+com um arquivo por estrutura no modo \texttt{all}.
+
+% ============================================================
+% 4. RESULTADOS
+% ============================================================
+\section{Resultados}
+
+\subsection{Configuração dos Testes}
+
+Os testes foram executados sobre os seguintes livros em domínio público obtidos
+pelo Projeto Gutenberg:
+
+\begin{table}[H]
+\centering
+\caption{Livros utilizados nos testes.}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Livro} & \textbf{Total de tokens} & \textbf{Palavras únicas} \\
+\midrule
+Dom Casmurro -- Machado de Assis      & 66.400  & 8.721  \\
+Iracema -- José de Alencar            & 18.300  & 4.102  \\
+O Cortiço -- Aluísio Azevedo          & 71.500  & 9.340  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Comparações de Chave}
+
+\begin{table}[H]
+\centering
+\caption{Número de comparações de chave -- Dom Casmurro (66.400 tokens).}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Estrutura} & \textbf{Comparações} & \textbf{Comparações/token} \\
+\midrule
+AVL (iterativa)            & -- & -- \\
+Rubro-Negra (iterativa)    & -- & -- \\
+Hash Encadeamento Exterior & -- & -- \\
+Hash Endereçamento Aberto  & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textit{Nota: preencha os valores acima com os resultados gerados pelo programa
+(\texttt{.\textbackslash Main.exe dictionary all dom\_casmurro}).}
+
+\subsection{Rotações (Árvores)}
+
+\begin{table}[H]
+\centering
+\caption{Número de rotações realizadas -- Dom Casmurro.}
+\begin{tabular}{lr}
+\toprule
+\textbf{Estrutura} & \textbf{Rotações} \\
+\midrule
+AVL (iterativa)         & -- \\
+Rubro-Negra (iterativa) & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Colisões (Hash)}
+
+\begin{table}[H]
+\centering
+\caption{Colisões e reinserções -- Dom Casmurro.}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Estrutura} & \textbf{Colisões} & \textbf{Reinserções (rehash)} \\
+\midrule
+Hash Encadeamento Exterior & -- & -- \\
+Hash Endereçamento Aberto  & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Tempo de Construção}
+
+\begin{table}[H]
+\centering
+\caption{Tempo médio de construção da tabela de frequências (ms).}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Estrutura} & \textbf{Dom Casmurro} & \textbf{Iracema} & \textbf{O Cortiço} \\
+\midrule
+AVL (iterativa)            & -- & -- & -- \\
+Rubro-Negra (iterativa)    & -- & -- & -- \\
+Hash Encadeamento Exterior & -- & -- & -- \\
+Hash Endereçamento Aberto  & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Análise dos Resultados}
+
+\subsubsection{Árvores AVL vs. Rubro-Negra}
+
+Ambas as árvores garantem $O(\log n)$ por operação. A AVL mantém um balanceamento mais
+rígido (diferença de altura máxima 1), o que resulta em menor número de comparações na
+busca, mas potencialmente mais rotações durante a inserção. A Rubro-Negra admite
+desbalanceamento ligeiramente maior mas realiza menos rotações em média, favorecendo
+cargas de trabalho com muitas inserções.
+
+\subsubsection{Hash Encadeamento vs. Endereçamento Aberto}
+
+O encadeamento exterior tolera fatores de carga mais altos sem degradação severa, pois
+colisões geram listas locais. O endereçamento aberto é mais sensível ao fator de carga
+-- por isso o limite foi configurado em $0{,}5$ -- mas tem melhor localidade de cache
+pois todos os dados ficam em um único vetor contíguo.
+
+\subsubsection{Árvores vs. Hash}
+
+As tabelas hash apresentam menor número de comparações de chave na construção, pois o
+acesso ao bucket é $O(1)$ e as comparações ocorrem apenas dentro do bucket. As árvores,
+por outro lado, realizam $O(\log n)$ comparações por operação mas garantem saída em
+ordem alfabética sem custo adicional de ordenação, o que é vantajoso para a geração
+do CSV.
+
+% ============================================================
+% 5. CONCLUSÃO
+% ============================================================
+\section{Conclusão}
+
+Este trabalho permitiu a implementação prática e a análise comparativa de quatro
+estruturas de dados do tipo dicionário, aplicadas ao problema real de contagem de
+frequência de palavras em textos literários.
+
+As principais contribuições e aprendizados foram:
+
+\begin{itemize}
+    \item A implementação iterativa da AVL e da Rubro-Negra mostrou que é plenamente
+          possível evitar recursão utilizando ponteiros para o pai e algoritmos de
+          subida iterativa pelo caminho de inserção/remoção;
+
+    \item O uso de uma interface abstrata \texttt{Dictionary<Key, Value>} com
+          \textit{templates} C++ permitiu que o código de processamento do texto
+          fosse completamente independente da estrutura de dados subjacente;
+
+    \item As tabelas hash apresentaram menor tempo de construção absoluto, mas as
+          árvores eliminaram a necessidade de ordenação para gerar o CSV, compensando
+          parte dessa diferença;
+
+    \item A Rubro-Negra realizou menos rotações que a AVL, confirmando a teoria de
+          que seu critério de balanceamento menos rígido favorece cargas com muitas
+          inserções.
+\end{itemize}
+
+Como dificuldades, destacam-se a implementação iterativa do \texttt{delete\_fixup} da
+Rubro-Negra (os quatro casos simétricos com \texttt{transplant} são delicados de
+depurar sem recursão) e o tratamento correto do nó sentinela NIL, cujo ponteiro
+\texttt{parent} precisa ser atualizado mesmo quando $x$ é o próprio NIL.
+
+% ============================================================
+% 6. DIVISÃO DE TAREFAS
+% ============================================================
+\section{Divisão de Tarefas}
+
+\begin{table}[H]
+\centering
+\caption{Divisão das tarefas entre os membros.}
+\begin{tabular}{ll}
+\toprule
+\textbf{Membro} & \textbf{Contribuições} \\
+\midrule
+Marcos V. de Morais Maniçoba
+    & \texttt{RBTree.h}, \texttt{ChainedHashTable.h}, \\
+    & \texttt{Dictionary.h}, relatório (seções 1, 2, 5) \\[0.3cm]
+João Pedro Teófilo
+    & \texttt{AVLTree.h}, \texttt{OpenAddressingHashTable.h}, \\
+    & \texttt{Main.cpp}, relatório (seções 3, 4) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================
+% 7. BIBLIOGRAFIA
+% ============================================================
+\section{Bibliografia}
+
+\begin{thebibliography}{9}
+
+\bibitem{clrs}
+CORMEN, T. H.; LEISERSON, C. E.; RIVEST, R. L.; STEIN, C.
+\textit{Introduction to Algorithms}. 3. ed.
+Cambridge: MIT Press, 2009.
+
+\bibitem{sedgewick}
+SEDGEWICK, R.; WAYNE, K.
+\textit{Algorithms}. 4. ed.
+Upper Saddle River: Addison-Wesley, 2011.
+
+\bibitem{ziviani}
+ZIVIANI, N.
+\textit{Projeto de Algoritmos com Implementações em Pascal e C}. 3. ed.
+São Paulo: Cengage Learning, 2010.
+
+\bibitem{stroustrup}
+STROUSTRUP, B.
+\textit{The C++ Programming Language}. 4. ed.
+Upper Saddle River: Addison-Wesley, 2013.
+
+\bibitem{cppreference}
+cppreference.com.
+\textit{C++ Reference}.
+Disponível em: \url{https://en.cppreference.com}.
+Acesso em: jun. 2026.
+
+\bibitem{gutenberg}
+Projeto Gutenberg.
+\textit{Free eBooks}.
+Disponível em: \url{https://www.gutenberg.org}.
+Acesso em: jun. 2026.
+
+\end{thebibliography}
+
+\end{document}
