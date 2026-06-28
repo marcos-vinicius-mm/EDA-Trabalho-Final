@@ -3,6 +3,19 @@
 Contador de frequência de palavras usando quatro implementações de dicionário:
 AVL iterativa, Rubro-Negra iterativa, Hash com encadeamento exterior e Hash com endereçamento aberto.
 
+## Pré-requisitos
+
+É necessário ter o compilador `g++` (com suporte a C++17) e o `make` instalados.
+
+No Linux, instale-os com:
+
+```bash
+sudo apt update
+sudo apt install build-essential
+```
+
+O pacote `build-essential` instala o `g++`, o `make` e outras ferramentas necessárias para compilação.
+
 ## Compilação
 
 ```bash
@@ -52,7 +65,7 @@ frequencia/
     test_books/          # Livros de teste (.txt)
   src/
     Main.cpp
-  sheet_results/         # CSVs gerados (criado em runtime)
+  sheet_results/         # CSVs gerados
   Makefile
 apresentacao/
   Relatorio/
