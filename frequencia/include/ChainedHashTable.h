@@ -355,6 +355,12 @@ public:
      * Isto pode alterar a ordem de iteracao dos elementos dentro do container.
      * Operacoes de rehashing sao realizadas automaticamente pelo container 
      * sempre que load_factor() ultrapassa o m_max_load_factor.
+     *
+     * IMPORTANTE: esta operacao NAO conta como comparisons nem collisions.
+     * Ela nao realiza nenhuma busca por chave nova — apenas reposiciona
+     * elementos que ja existiam na tabela para os slots da tabela maior.
+     * O custo desse reposicionamento e contabilizado separadamente em
+     * m_metrics.reinsertions (uma unidade por elemento movido).
      * 
      * @param m := o novo tamanho da tabela hash
      */
@@ -362,24 +368,26 @@ public:
         if(m > m_table_size) {
             
             size_t oldSize = m_table_size;
-
+ 
             size_t newTableSize = get_next_prime(m);
             m_table_size = newTableSize;
-
-            // cria a nova tabela como tamanho maior
+ 
+            // cria a nova tabela com tamanho maior
             std::vector<std::list<std::pair<Key,Value>>> temp_table(newTableSize);
             
             // transfere pares da tabela antiga para a nova
             for(size_t i = 0; i < oldSize; ++i) {
                 for(auto& par : m_table[i]) {
+                    m_metrics.reinsertions++;
                     size_t slot = hash_code(par.first);
                     temp_table[slot].push_back({par.first, par.second});
                 }
             }
-            // faz o swap das tabelas
+
             m_table.swap(temp_table);
         }
     }
+
 
 
     /**

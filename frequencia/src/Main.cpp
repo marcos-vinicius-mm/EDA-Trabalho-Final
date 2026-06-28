@@ -311,7 +311,7 @@ static std::string resolve_text_path(const std::string& txt_arg) {
     }
 
     // Pasta onde os livros estao armazenados.
-    const std::string books_dir = "include/test_books/";
+    const std::string books_dir = "../../include/test_books/";
     std::string txt_file = books_dir + txt_arg;
     // Adiciona .txt automaticamente se o usuario nao colocou
     if (txt_file.size() < 4 ||
@@ -398,7 +398,7 @@ static RunResult run_structure(const std::string& type,
 
 static void print_help(const char* prog) {
     std::cout
-        << "Uso:\n"
+        << "\nUso:\n"
         << "  " << prog << " dictionary <estrutura> <arquivo.txt> [saida.csv]\n\n"
         << "Estruturas disponiveis:\n"
         << "  avl         Arvore AVL completamente iterativa\n"
@@ -432,9 +432,9 @@ int main(int argc, char* argv[]) {
 
     // Valida numero minimo de argumentos
     if (argc < 4) {
-        std::cerr << "Uso: " << argv[0]
+        std::cerr << "\nUso: " << argv[0]
                   << " dictionary <estrutura> <arquivo.txt> [saida.csv]\n"
-                  << "Use --help para mais informacoes.\n\n";
+                  << "\nUse --help para mais informacoes.\n\n";
         return 1;
     }
 

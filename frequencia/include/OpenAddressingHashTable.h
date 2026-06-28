@@ -150,6 +150,39 @@ private:
 
 
     /**
+     * @brief Insere um elemento sem contar comparisons/collisions.
+     *        Usado exclusivamente pelo rehash() para reposicionar
+     *        elementos que ja existiam na tabela (nao eh uma busca
+     *        por chave nova, e sim uma realocacao estrutural).
+     *
+     * Como a tabela acabou de ser recriada vazia e cada chave so
+     * pode ocupar um slot, a primeira posicao livre encontrada na
+     * sondagem ja eh garantidamente a posicao correta — nao ha
+     * necessidade de comparar chaves nem de contar colisoes aqui,
+     * pois nenhuma chave duplicada pode existir na tabela antiga.
+     *
+     * @param k := chave
+     * @param v := valor
+     */
+    void raw_insert_no_metrics(const Key& k, const Value& v) {
+        size_t i = 0;
+        size_t h_inicial = hash_code(k);
+ 
+        while (i < m_table_size) {
+            size_t j = linear_probe(h_inicial, i);
+            if (m_table[j].status == Status::EMPTY) {
+                m_table[j].key    = k;
+                m_table[j].value  = v;
+                m_table[j].status = Status::ACTIVE;
+                m_number_of_elements++;
+                return;
+            }
+            i++;
+        }
+    }
+
+
+    /**
      * @brief Operacao de reconstrucao da tabela hash.
      * 
      * @param new_size := o novo tamanho base
@@ -162,14 +195,15 @@ private:
         m_table_size = new_prime_size;
         m_number_of_elements = 0;
         m_deleted_elements = 0;
-
+ 
         for (const auto& node : old_table) {
             if (node.status == Status::ACTIVE) {
                 m_metrics.reinsertions++;
-                insert(node.key, node.value);
+                raw_insert_no_metrics(node.key, node.value);   // <-- nao usa insert()
             }
         }
     }
+
 
 
 public:
