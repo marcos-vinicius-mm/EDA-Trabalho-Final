@@ -90,7 +90,7 @@ static std::string strip_edges(const std::string& tok) {
  * @brief Substitui pontuacoes UTF-8 (como aspas) por espacos.
  */
 static void normalize_utf8_punctuation(std::string& line) {
-    std::string bad_chars[] = {"«", "»", "“", "”", "‘", "’", "—", "…"};
+    std::string bad_chars[] = {"«", "»", "“", "”", "‘", "’", "—", "…", "•", "™"};
     
     for (const auto& bad : bad_chars) {
         size_t pos = 0;
@@ -123,8 +123,19 @@ static std::vector<std::string> tokenize(const std::string& filename) {
 
     std::vector<std::string> words;
     std::string line;
+    bool first_line = true;
 
     while (std::getline(fin, line)) {
+        if (first_line) {
+            if (line.size() >= 3 && 
+                (unsigned char)line[0] == 0xEF && 
+                (unsigned char)line[1] == 0xBB && 
+                (unsigned char)line[2] == 0xBF) {
+                line.erase(0, 3); // Remove os 3 bytes do BOM
+            }
+            first_line = false;
+        }
+
         normalize_utf8_punctuation(line);
         std::string token;
 
@@ -311,7 +322,7 @@ static std::string resolve_text_path(const std::string& txt_arg) {
     }
 
     // Pasta onde os livros estao armazenados.
-    const std::string books_dir = "../../include/test_books/";
+    const std::string books_dir = "include/test_books/";
     std::string txt_file = books_dir + txt_arg;
     // Adiciona .txt automaticamente se o usuario nao colocou
     if (txt_file.size() < 4 ||
