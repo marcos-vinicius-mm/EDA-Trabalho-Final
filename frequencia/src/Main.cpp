@@ -90,7 +90,7 @@ static std::string strip_edges(const std::string& tok) {
  * @brief Substitui pontuacoes UTF-8 (como aspas) por espacos.
  */
 static void normalize_utf8_punctuation(std::string& line) {
-    std::string bad_chars[] = {"«", "»", "“", "”", "‘", "’", "—", "…", "•", "™"};
+    std::string bad_chars[] = {"«", "»", "“", "”", "‘", "—", "…", "•", "™"};
     
     for (const auto& bad : bad_chars) {
         size_t pos = 0;
@@ -157,6 +157,32 @@ static std::vector<std::string> tokenize(const std::string& filename) {
                         continue;
                     } else {
                         sep = true;  
+                    }
+                }
+            }
+
+            bool is_curly_apos = !sep && c == 0xE2 && i + 2 < line.size() &&
+                    (unsigned char)line[i + 1] == 0x80 &&
+                    (unsigned char)line[i + 2] == 0x99;
+            bool is_straight_apos = !sep && c == '\'';
+
+            if (is_curly_apos || is_straight_apos) {
+                size_t apos_len = is_curly_apos ? 3 : 1;
+                if (token.empty()) {
+                    sep = true; 
+                    if (is_curly_apos) i += 2; 
+                } else {
+                    size_t next_idx = i + apos_len;
+                    bool next_is_alpha = (next_idx < line.size()) &&
+                        (std::isalpha((unsigned char)line[next_idx]) ||
+                        (unsigned char)line[next_idx] > 127);
+                    if (next_is_alpha) {
+                        token.append(line, i, apos_len);
+                        i += apos_len - 1;
+                        continue;
+                    } else {
+                        sep = true;
+                        if (is_curly_apos) i += 2;
                     }
                 }
             }
