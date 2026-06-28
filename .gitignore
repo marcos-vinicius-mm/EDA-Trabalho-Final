@@ -45,11 +45,13 @@ Build/
 build-*/
 .vscode/*
 
+frequencia/freq
+frequencia/sheet_results/
+
 # CMake generated files
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
-Makefile
 install_manifest.txt
 compile_commands.json
 

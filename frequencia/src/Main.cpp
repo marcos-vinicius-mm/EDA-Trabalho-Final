@@ -1,9 +1,9 @@
 /**
- * @file main.cpp
+ * @file Main.cpp
  * @brief Contador de frequencia de palavras — QXD0115 EDA Projeto Final
  *
  * Uso:
- *   .\Main.exe dictionary <estrutura> <arquivo.txt>
+ *   ./freq dictionary <estrutura> <arquivo.txt> [saida.csv]
  *
  * Estruturas disponiveis:
  *   avl         Arvore AVL completamente iterativa
@@ -13,10 +13,10 @@
  *   all         Executa as quatro estruturas e exibe comparativo de metricas
  *
  * Exemplos:
- *   .\Main.exe dictionary avl livro.txt
- *   .\Main.exe dictionary hash-chain livro.txt
- *   .\Main.exe dictionary all livro.txt
- *   .\Main.exe --help
+ *   ./freq dictionary avl dom-casmurro
+ *   ./freq dictionary hash-chain sherlock_holmes
+ *   ./freq dictionary all dom-casmurro
+ *   ./freq --help
  */
 
 #include <iostream>
@@ -40,13 +40,29 @@
 
 /**
  * @brief Converte letras maiusculas ASCII para minusculas.
- *        Caracteres acentuados (> 127) sao mantidos intactos.
+ *        Maiusculas acentuadas em UTF-8 tambem sao convertidas.
  */
-static std::string to_lower_ascii(const std::string& s) {
-    std::string r = s;
-    for (auto& c : r) {
-        if (c >= 'A' && c <= 'Z')
-            c = static_cast<char>(c + 32);
+static std::string to_lower(const std::string& s) {
+    std::string r;
+    r.reserve(s.size());
+
+    for (size_t i = 0; i < s.size(); ++i) {
+        unsigned char c = static_cast<unsigned char>(s[i]);
+
+        if (c >= 'A' && c <= 'Z') {
+            r += static_cast<char>(c + 32);
+        } else if (c == 0xC3 && i + 1 < s.size()) {
+            unsigned char c2 = static_cast<unsigned char>(s[i + 1]);
+            if (c2 >= 0x80 && c2 <= 0x9E) {
+                r += static_cast<char>(c);
+                r += static_cast<char>(c2 + 0x20);
+                ++i;
+            } else {
+                r += static_cast<char>(c);
+            }
+        } else {
+            r += static_cast<char>(c);
+        }
     }
     return r;
 }
@@ -71,13 +87,29 @@ static std::string strip_edges(const std::string& tok) {
 }
 
 /**
+ * @brief Substitui pontuacoes UTF-8 (como aspas) por espacos.
+ */
+static void normalize_utf8_punctuation(std::string& line) {
+    std::string bad_chars[] = {"«", "»", "“", "”", "‘", "’", "—", "…"};
+    
+    for (const auto& bad : bad_chars) {
+        size_t pos = 0;
+        while ((pos = line.find(bad, pos)) != std::string::npos) {
+            line.replace(pos, bad.length(), bad.length(), ' '); 
+            pos += bad.length();
+        }
+    }
+}
+
+
+/**
  * @brief Le o arquivo de texto e retorna vetor de palavras normalizadas.
  *
  * Regras de tokenizacao:
  *  - Espacos e sinais de pontuacao sao separadores.
  *  - Hifen no meio de palavra eh mantido ("mostra-lo").
  *  - Hifen isolado ou no inicio/fim de token eh descartado.
- *  - Todas as letras sao convertidas para minusculas (ASCII).
+ *  - Todas as letras sao convertidas para minusculas.
  *
  * @param filename caminho para o arquivo .txt
  * @return std::vector<std::string>  palavras normalizadas
@@ -93,6 +125,7 @@ static std::vector<std::string> tokenize(const std::string& filename) {
     std::string line;
 
     while (std::getline(fin, line)) {
+        normalize_utf8_punctuation(line);
         std::string token;
 
         for (size_t i = 0; i <= line.size(); ++i) {
@@ -112,12 +145,11 @@ static std::vector<std::string> tokenize(const std::string& filename) {
                         token += static_cast<char>(c);
                         continue;
                     } else {
-                        sep = true;  // hifen de dialogo ou no fim: descarta
+                        sep = true;  
                     }
                 }
             }
 
-            // Pontuacao ASCII nao-letra e nao-hifen: separador
             if (!sep && !std::isalpha(c) && c < 128 && c != '-')
                 sep = true;
 
@@ -127,7 +159,7 @@ static std::vector<std::string> tokenize(const std::string& filename) {
                 if (!token.empty()) {
                     std::string clean = strip_edges(token);
                     if (!clean.empty())
-                        words.push_back(to_lower_ascii(clean));
+                        words.push_back(to_lower(clean));
                     token.clear();
                 }
             }
@@ -141,7 +173,7 @@ static std::vector<std::string> tokenize(const std::string& filename) {
 
 /**
  * @brief Percorre o vetor de palavras e popula o dicionario com as frequencias.
- *        Usa insert() para a primeira ocorrencia e at() para incrementar.
+ *        Usa insert_or_increment() para inserir ou incrementar em uma unica busca.
  *        Compativel com qualquer implementacao de Dictionary<string,int>.
  *
  * @param dict   dicionario a ser populado
@@ -150,11 +182,19 @@ static std::vector<std::string> tokenize(const std::string& filename) {
 static void build_frequency(Dictionary<std::string, int>& dict,
                              const std::vector<std::string>& words) {
     for (const auto& w : words) {
-        if (!dict.insert(w, 1)) {   // insert retorna false se chave ja existia
-            dict.at(w)++;           // então incrementa o contador
-        }
+        dict.insert_or_increment(w, 1);
     }
 }
+
+
+// Resultado de uma execucao
+
+struct RunResult {
+    std::string type;
+    std::string name;
+    Metrics metrics;
+    size_t unique_count = 0;
+};
 
 
 // Exibição de métricas
@@ -162,7 +202,7 @@ static void build_frequency(Dictionary<std::string, int>& dict,
 /**
  * @brief Imprime as métricas coletadas por uma estrutura de dados.
  *
- * @param name         nome amigavel da estrutura
+ * @param name         nome da estrutura
  * @param m            metricas coletadas
  * @param word_count   total de tokens processados
  * @param unique_count total de palavras unicas inseridas
@@ -170,7 +210,7 @@ static void build_frequency(Dictionary<std::string, int>& dict,
 static void print_metrics(const std::string& name,
                            const Metrics& m,
                            size_t word_count,
-                           size_t unique_count) 
+                           size_t unique_count)
 {
     std::cout << "\n+------------------------------------------+\n";
     std::cout << "| Estrutura : " << std::left << std::setw(29) << name << "|\n";
@@ -190,6 +230,35 @@ static void print_metrics(const std::string& name,
 }
 
 
+static void print_comparison_table(const std::vector<RunResult>& results,
+                                   size_t word_count)
+{
+    std::cout << "\n==================== COMPARATIVO ====================\n";
+    std::cout << std::left << std::setw(30) << "Estrutura"
+              << std::right
+              << std::setw(14) << "Comparacoes"
+              << std::setw(10) << "Rotac."
+              << std::setw(10) << "Colis."
+              << std::setw(12) << "Tempo(ms)"
+              << "\n";
+    std::cout << std::string(76, '-') << "\n";
+
+    for (const auto& r : results) {
+        std::cout << std::left << std::setw(30) << r.name
+                  << std::right
+                  << std::setw(14) << r.metrics.comparisons
+                  << std::setw(10) << (r.metrics.rotations > 0 ? std::to_string(r.metrics.rotations) : "-")
+                  << std::setw(10) << (r.metrics.collisions > 0 ? std::to_string(r.metrics.collisions) : "-")
+                  << std::fixed << std::setprecision(3)
+                  << std::setw(12) << r.metrics.elapsed_ms
+                  << "\n";
+    }
+
+    std::cout << std::string(76, '-') << "\n";
+    std::cout << "Tokens processados: " << word_count << "\n";
+}
+
+
 // Escrita do CSV de saida
 
 /**
@@ -201,6 +270,11 @@ static void print_metrics(const std::string& name,
  */
 static bool write_csv(Dictionary<std::string, int>& dict,
                       const std::string& out_path) {
+    std::filesystem::path path(out_path);
+    if (path.has_parent_path()) {
+        std::filesystem::create_directories(path.parent_path());
+    }
+
     std::ofstream fout(out_path);
     if (!fout.is_open()) {
         std::cerr << "Erro: nao foi possivel criar '" << out_path << "'\n";
@@ -210,6 +284,41 @@ static bool write_csv(Dictionary<std::string, int>& dict,
     dict.print_csv(fout);
     std::cout << "CSV gerado: " << out_path << "\n";
     return true;
+}
+
+
+static std::string resolve_csv_path(const std::string& output_dir,
+                                    const std::string& csv_arg,
+                                    const std::string& default_name) {
+    if (csv_arg.empty()) {
+        return output_dir + default_name;
+    }
+    // Caminho completo: usa direto; caso contrario, prefixo output_dir
+    if (csv_arg.find('/') != std::string::npos ||
+        csv_arg.find('\\') != std::string::npos) {
+        return csv_arg;
+    }
+    return output_dir + csv_arg;
+}
+
+
+static std::string resolve_text_path(const std::string& txt_arg) {
+    // Monta o caminho completo: se o usuario ja passou um caminho com
+    // separador (/ ou \), usa direto; caso contrario, prefixo books_dir.
+    if (txt_arg.find('/') != std::string::npos ||
+        txt_arg.find('\\') != std::string::npos) {
+        return txt_arg;
+    }
+
+    // Pasta onde os livros estao armazenados.
+    const std::string books_dir = "include/test_books/";
+    std::string txt_file = books_dir + txt_arg;
+    // Adiciona .txt automaticamente se o usuario nao colocou
+    if (txt_file.size() < 4 ||
+        txt_file.substr(txt_file.size() - 4) != ".txt") {
+        txt_file += ".txt";
+    }
+    return txt_file;
 }
 
 
@@ -251,15 +360,19 @@ static std::string friendly_name(const std::string& type) {
  * @param out_csv caminho do CSV de saida (vazio = nao grava)
  * @param write_output true se deve gravar o CSV
  */
-static void run_structure(const std::string& type,
-                           const std::vector<std::string>& words,
-                           const std::string& out_csv,
-                           bool write_output) 
+static RunResult run_structure(const std::string& type,
+                               const std::vector<std::string>& words,
+                               const std::string& out_csv,
+                               bool write_output)
 {
+    RunResult result;
+    result.type = type;
+    result.name = friendly_name(type);
+
     DictPtr dict = make_dict(type);
     if (!dict) {
         std::cerr << "Estrutura desconhecida: " << type << "\n";
-        return;
+        return result;
     }
 
     // Mede o tempo de construcao da tabela de frequencias
@@ -267,13 +380,17 @@ static void run_structure(const std::string& type,
     build_frequency(*dict, words);
     auto t1 = std::chrono::high_resolution_clock::now();
 
-    double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
-    const_cast<Metrics&>(dict->metrics()).elapsed_ms = ms;
+    result.metrics = dict->metrics();
+    result.metrics.elapsed_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
+    result.unique_count = dict->size();
 
-    print_metrics(friendly_name(type), dict->metrics(), words.size(), dict->size());
+    print_metrics(result.name, result.metrics, words.size(), result.unique_count);
 
-    if (write_output && !out_csv.empty())
+    if (write_output && !out_csv.empty()) {
         write_csv(*dict, out_csv);
+    }
+
+    return result;
 }
 
 
@@ -290,11 +407,11 @@ static void print_help(const char* prog) {
         << "  hash-open   Hash com enderecamento aberto  (OpenAddressingHashTable)\n"
         << "  all         Executa as quatro estruturas e exibe comparativo\n\n"
         << "Exemplos:\n"
-        << "  " << prog << " dictionary avl        livro.txt\n"
-        << "  " << prog << " dictionary hash-chain livro.txt\n"
-        << "  " << prog << " dictionary all        livro.txt\n\n"
+        << "  " << prog << " dictionary avl        dom-casmurro\n"
+        << "  " << prog << " dictionary hash-chain sherlock_holmes\n"
+        << "  " << prog << " dictionary all        dom-casmurro\n\n"
         << "Opcoes:\n"
-        << "  --help   Exibe esta mensagem de ajuda\n\n"
+        << "  --help, -h   Exibe esta mensagem de ajuda\n\n"
         << "Formato do CSV de saida:\n"
         << "  palavra,frequencia   (cabecalho)\n"
         << "  <palavra>,<n>        (uma linha por palavra, em ordem alfabetica)\n\n";
@@ -332,21 +449,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Pasta onde os livros estao armazenados.
-    const std::string books_dir = "../../include/test_books/";
-
-    // Monta o caminho completo: se o usuario ja passou um caminho com
-    // separador (/ ou \), usa direto; caso contrario, prefixo books_dir.
-    std::string txt_file = txt_arg;
-    if (txt_arg.find('/') == std::string::npos &&
-        txt_arg.find('\\') == std::string::npos) {
-        txt_file = books_dir + txt_arg;
-        // Adiciona .txt automaticamente se o usuario nao colocou
-        if (txt_file.size() < 4 ||
-            txt_file.substr(txt_file.size() - 4) != ".txt") {
-            txt_file += ".txt";
-        }
-    }
+    std::string txt_file = resolve_text_path(txt_arg);
 
     // Le e tokeniza o arquivo uma unica vez (compartilhado por todas as estruturas)
     std::cout << "Lendo arquivo: " << txt_file << " ...\n";
@@ -373,14 +476,23 @@ int main(int argc, char* argv[]) {
         // Cada estrutura gera seu proprio CSV em sheet_results/<livro>/.
         // Ex.: sheet_results/dom_casmurro/avl.csv
         const std::vector<std::string> all_types = {"avl", "rb", "hash-chain", "hash-open"};
+        std::vector<RunResult> results;
+        results.reserve(all_types.size());
+
         for (const auto& t : all_types) {
             std::string out = output_dir + t + ".csv";
-            run_structure(t, words, out, true);
+            results.push_back(run_structure(t, words, out, true));
         }
+
+        print_comparison_table(results, words.size());
     } else {
         // Estrutura unica: usa o nome fornecido pelo usuario,
         // ou <estrutura>.csv como padrão, dentro de sheet_results/<livro>/.
-        std::string out = output_dir + (csv_file.empty() ? type + ".csv" : csv_file);
+        if (!make_dict(type)) {
+            std::cerr << "Estrutura desconhecida: " << type << "\n";
+            return 1;
+        }
+        std::string out = resolve_csv_path(output_dir, csv_file, type + ".csv");
         run_structure(type, words, out, true);
     }
 

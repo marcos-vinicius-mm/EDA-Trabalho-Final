@@ -272,6 +272,53 @@ public:
 
 
     /**
+     * @brief Insere (k, initial) ou soma initial ao valor existente em uma unica busca.
+     */
+    bool insert_or_increment(const Key& k, const Value& initial = Value{1}) override {
+        if (needs_rehash()) {
+            rehash(2 * m_table_size);
+        }
+
+        size_t i = 0;
+        size_t h_inicial = hash_code(k);
+        long long index_disponivel = -1;
+
+        while (i < m_table_size) {
+            size_t j = linear_probe(h_inicial, i);
+
+            if (m_table[j].status == Status::ACTIVE) {
+                m_metrics.comparisons++;
+                if (m_table[j].key == k) {
+                    m_table[j].value += initial;
+                    return false;
+                }
+                m_metrics.collisions++;
+            } else if (m_table[j].status == Status::EMPTY) {
+                if (index_disponivel == -1) index_disponivel = j;
+                break;
+            } else if (m_table[j].status == Status::DELETED) {
+                if (index_disponivel == -1) index_disponivel = j;
+                m_metrics.collisions++;
+            }
+            i++;
+        }
+
+        if (index_disponivel != -1) {
+            if (m_table[index_disponivel].status == Status::DELETED) {
+                m_deleted_elements--;
+            }
+            m_table[index_disponivel].key = k;
+            m_table[index_disponivel].value = initial;
+            m_table[index_disponivel].status = Status::ACTIVE;
+            m_number_of_elements++;
+            return true;
+        }
+
+        return false;
+    }
+
+
+    /**
      * @brief Atualiza o valor de uma chave existente.
      * 
      * @param k := chave
@@ -369,8 +416,15 @@ public:
 
 
     void print_csv(std::ostream& os) const override {
-        auto sorted = to_sorted_vector();
-        for(const auto& par : sorted) {
+        std::vector<std::pair<Key, Value>> sorted;
+        for (auto it = begin(); it != end(); ++it) {
+            sorted.push_back(*it);
+        }
+        std::sort(sorted.begin(), sorted.end(),
+                  [](const std::pair<Key, Value>& a, const std::pair<Key, Value>& b) {
+                      return a.first < b.first;
+                  });
+        for (const auto& par : sorted) {
             os << par.first << "," << par.second << "\n";
         }
     }

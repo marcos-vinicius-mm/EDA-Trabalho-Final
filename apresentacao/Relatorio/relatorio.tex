@@ -103,9 +103,7 @@
 \begin{titlepage}
     \centering
 
-    \includegraphics[width=0.25\textwidth]{img/logo_ufc.png}\\[0.5cm]
-
-    {\large \textbf{Universidade Federal do Ceará}}\\
+    {\Large \textbf{UFC -- Universidade Federal do Ceará}}\\[0.3cm]
     {\large Campus Quixadá}\\
     {\large Curso de Ciência da Computação}\\[1.5cm]
 
@@ -300,8 +298,9 @@ frequencia/
     OpenAddressingHashTable.h # Hash com enderecamento aberto
   src/
     Main.cpp                  # Programa principal (CLI)
-  books/                      # Pasta dos livros .txt
-  sheet_results/              # Pasta de saida dos CSVs
+  include/test_books/         # Livros .txt para testes
+  sheet_results/              # CSVs gerados em tempo de execucao
+  Makefile                    # Compilacao (gera executavel freq)
 \end{lstlisting}
 
 \subsection{Interface Dictionary}
@@ -323,6 +322,7 @@ public:
     virtual void   clear()                              = 0;
     virtual std::vector<std::pair<Key,Value>>
                    to_sorted_vector() const             = 0;
+    virtual bool insert_or_increment(const Key& k, const Value& initial = Value{1}) = 0;
     virtual void   print_csv(std::ostream& os) const    = 0;
     virtual const Metrics& metrics() const              = 0;
     virtual void   reset_metrics()                      = 0;
@@ -347,7 +347,8 @@ A tokenização do arquivo segue as seguintes regras, implementadas em \texttt{t
 
 \begin{enumerate}
     \item Espaços e pontuação são tratados como separadores de palavras;
-    \item Todas as letras maiúsculas ASCII são convertidas para minúsculas;
+    \item Todas as letras maiúsculas (ASCII e acentuadas UTF-8) são convertidas
+          para minúsculas;
     \item O hífen \textbf{no interior} de uma palavra é preservado
           (ex.: \textit{mostrá-lo} permanece como uma entrada única);
     \item O hífen \textbf{isolado} ou no início/fim de token é descartado
@@ -364,19 +365,21 @@ de \texttt{Dictionary}:
 static void build_frequency(Dictionary<std::string, int>& dict,
                              const std::vector<std::string>& words) {
     for (const auto& w : words) {
-        if (!dict.insert(w, 1)) { // false = chave ja existia
-            dict.at(w)++;
-        }
+        dict.insert_or_increment(w, 1);
     }
 }
 \end{lstlisting}
+
+O método \texttt{insert\_or\_increment()} realiza inserção ou incremento em
+\textbf{uma única busca} por palavra, evitando comparar a chave duas vezes
+(\texttt{insert} + \texttt{at}) e tornando as métricas mais representativas.
 
 \subsection{Interface de Linha de Comando}
 
 O programa é chamado com a seguinte sintaxe:
 
 \begin{lstlisting}[language=bash, caption={Sintaxe de uso do programa.}]
-.\Main.exe dictionary <estrutura> <livro> [saida.csv]
+./freq dictionary <estrutura> <livro> [saida.csv]
 \end{lstlisting}
 
 Os parâmetros aceitos para \texttt{<estrutura>} são:
@@ -400,14 +403,14 @@ Os parâmetros aceitos para \texttt{<estrutura>} são:
 O argumento \texttt{<livro>} aceita três formatos:
 
 \begin{lstlisting}[language=bash]
-# Apenas o nome (busca automaticamente em books/)
-.\Main.exe dictionary all dom_casmurro
+# Apenas o nome (busca automaticamente em include/test_books/)
+./freq dictionary all dom-casmurro
 
 # Nome com extensao
-.\Main.exe dictionary all dom_casmurro.txt
+./freq dictionary all sherlock_holmes.txt
 
 # Caminho completo
-.\Main.exe dictionary all C:/livros/dom_casmurro.txt
+./freq dictionary all /caminho/para/livro.txt
 \end{lstlisting}
 
 Os CSVs são gerados automaticamente em \texttt{sheet\_results/<nome\_do\_livro>/},
@@ -420,8 +423,9 @@ com um arquivo por estrutura no modo \texttt{all}.
 
 \subsection{Configuração dos Testes}
 
-Os testes foram executados sobre os seguintes livros em domínio público obtidos
-pelo Projeto Gutenberg:
+Os testes foram executados sobre livros em domínio público (Projeto Gutenberg),
+no ambiente Linux, compilando com \texttt{g++ -std=c++17 -O2}. Cada teste foi
+executado com \texttt{./freq dictionary all <livro>}.
 
 \begin{table}[H]
 \centering
@@ -430,34 +434,31 @@ pelo Projeto Gutenberg:
 \toprule
 \textbf{Livro} & \textbf{Total de tokens} & \textbf{Palavras únicas} \\
 \midrule
-Dom Casmurro -- Machado de Assis      & 66.400  & 8.721  \\
-Iracema -- José de Alencar            & 18.300  & 4.102  \\
-O Cortiço -- Aluísio Azevedo          & 71.500  & 9.340  \\
+Dom Casmurro -- Machado de Assis       & 68.932  & 10.165 \\
+The Adventures of Sherlock Holmes      & 110.198 & 9.121  \\
+The Secret Garden -- Frances Hodgson     & 85.904  & 6.287  \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Comparações de Chave}
+\subsection{Comparações de Chave -- Dom Casmurro}
 
 \begin{table}[H]
 \centering
-\caption{Número de comparações de chave -- Dom Casmurro (66.400 tokens).}
+\caption{Número de comparações de chave -- Dom Casmurro (68.932 tokens).}
 \begin{tabular}{lrr}
 \toprule
 \textbf{Estrutura} & \textbf{Comparações} & \textbf{Comparações/token} \\
 \midrule
-AVL (iterativa)            & -- & -- \\
-Rubro-Negra (iterativa)    & -- & -- \\
-Hash Encadeamento Exterior & -- & -- \\
-Hash Endereçamento Aberto  & -- & -- \\
+AVL (iterativa)            & 735.424 & 10,67 \\
+Rubro-Negra (iterativa)    & 731.987 & 10,62 \\
+Hash Encadeamento Exterior & 77.914  & 1,13  \\
+Hash Endereçamento Aberto  & 80.157  & 1,16  \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\textit{Nota: preencha os valores acima com os resultados gerados pelo programa
-(\texttt{.\textbackslash Main.exe dictionary all dom\_casmurro}).}
-
-\subsection{Rotações (Árvores)}
+\subsection{Rotações (Árvores) -- Dom Casmurro}
 
 \begin{table}[H]
 \centering
@@ -466,13 +467,13 @@ Hash Endereçamento Aberto  & -- & -- \\
 \toprule
 \textbf{Estrutura} & \textbf{Rotações} \\
 \midrule
-AVL (iterativa)         & -- \\
-Rubro-Negra (iterativa) & -- \\
+AVL (iterativa)         & 7.517 \\
+Rubro-Negra (iterativa) & 6.250 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Colisões (Hash)}
+\subsection{Colisões (Hash) -- Dom Casmurro}
 
 \begin{table}[H]
 \centering
@@ -481,25 +482,25 @@ Rubro-Negra (iterativa) & -- \\
 \toprule
 \textbf{Estrutura} & \textbf{Colisões} & \textbf{Reinserções (rehash)} \\
 \midrule
-Hash Encadeamento Exterior & -- & -- \\
-Hash Endereçamento Aberto  & -- & -- \\
+Hash Encadeamento Exterior & 4.417  & --     \\
+Hash Endereçamento Aberto  & 21.390 & 10.912 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Tempo de Construção}
+\subsection{Tempo de Construção (ms)}
 
 \begin{table}[H]
 \centering
-\caption{Tempo médio de construção da tabela de frequências (ms).}
+\caption{Tempo de construção da tabela de frequências (ms).}
 \begin{tabular}{lrrr}
 \toprule
-\textbf{Estrutura} & \textbf{Dom Casmurro} & \textbf{Iracema} & \textbf{O Cortiço} \\
+\textbf{Estrutura} & \textbf{Dom Casmurro} & \textbf{Sherlock Holmes} & \textbf{Secret Garden} \\
 \midrule
-AVL (iterativa)            & -- & -- & -- \\
-Rubro-Negra (iterativa)    & -- & -- & -- \\
-Hash Encadeamento Exterior & -- & -- & -- \\
-Hash Endereçamento Aberto  & -- & -- & -- \\
+AVL (iterativa)            & 9,37  & 13,06 & 10,20 \\
+Rubro-Negra (iterativa)    & 8,69  & 13,39 & 9,92  \\
+Hash Encadeamento Exterior & 5,88  & 8,54  & 3,63  \\
+Hash Endereçamento Aberto  & 3,20  & 4,32  & 4,91  \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -553,9 +554,9 @@ As principais contribuições e aprendizados foram:
           árvores eliminaram a necessidade de ordenação para gerar o CSV, compensando
           parte dessa diferença;
 
-    \item A Rubro-Negra realizou menos rotações que a AVL, confirmando a teoria de
-          que seu critério de balanceamento menos rígido favorece cargas com muitas
-          inserções.
+    \item A Rubro-Negra realizou consistentemente menos rotações que a AVL
+          (ex.: 6.250 vs.\ 7.517 no Dom Casmurro), confirmando que seu critério
+          de balanceamento menos rígido favorece cargas com muitas inserções.
 \end{itemize}
 
 Como dificuldades, destacam-se a implementação iterativa do \texttt{delete\_fixup} da

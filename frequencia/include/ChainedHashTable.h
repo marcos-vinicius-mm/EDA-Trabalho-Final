@@ -133,7 +133,7 @@ public:
     /**
      * @brief Retorna o numero de elementos na tabela hash
      */
-    size_t size() const {
+    size_t size() const override {
         return m_number_of_elements;
     }
 
@@ -141,7 +141,7 @@ public:
     /**
      * @brief Retorna um booleano indicando se a tabela esta vazia
      */
-    bool empty() const {
+    bool empty() const override {
         return m_number_of_elements == 0;
     }
 
@@ -254,6 +254,29 @@ public:
 
 
     /**
+     * @brief Insere (k, initial) ou soma initial ao valor existente em uma unica busca.
+     */
+    bool insert_or_increment(const Key& k, const Value& initial = Value{1}) override {
+        size_t slot = hash_code(k);
+        for (auto& par : m_table[slot]) {
+            m_metrics.comparisons++;
+            if (par.first == k) {
+                par.second += initial;
+                return false;
+            }
+        }
+        if (needs_rehash()) {
+            rehash(2 * m_table_size);
+            slot = hash_code(k);
+        }
+        if (!m_table[slot].empty()) m_metrics.collisions++;
+        m_table[slot].push_back({k, initial});
+        m_number_of_elements++;
+        return true;
+    }
+
+
+    /**
      * @brief Recebe como entrada uma chave k e retorna true 
      * se e somente se a chave k estiver presente na tabela hash.
      * 
@@ -261,7 +284,7 @@ public:
      */
     bool contains(const Key& k) const override {
         size_t slot = hash_code(k);
-        for(auto& par : m_table[slot]) {
+        for(const auto& par : m_table[slot]) {
             m_metrics.comparisons++;
             if(par.first == k) {
                 return true;
@@ -439,8 +462,15 @@ public:
     }
 
     void print_csv(std::ostream& os) const override {
-        auto sorted = to_sorted_vector();
-        for(const auto& par : sorted) {
+        std::vector<std::pair<Key, Value>> sorted;
+        for (auto it = begin(); it != end(); ++it) {
+            sorted.push_back(*it);
+        }
+        std::sort(sorted.begin(), sorted.end(),
+                  [](const std::pair<Key, Value>& a, const std::pair<Key, Value>& b) {
+                      return a.first < b.first;
+                  });
+        for (const auto& par : sorted) {
             os << par.first << "," << par.second << "\n";
         }
     }
@@ -455,7 +485,7 @@ public:
     private:
         const ChainedHashTable* m_hash_table;
         size_t m_bucket;
-        typename std::list<std::pair<Key, Value>>::const_iterator m_list_it;
+        typename std::list<std::pair<Key, Value>>::const_iterator m_list_it{};
 
         void advance_to_valid_bucket() {
             while (m_bucket < m_hash_table->m_table_size && m_list_it == m_hash_table->m_table[m_bucket].end()) {

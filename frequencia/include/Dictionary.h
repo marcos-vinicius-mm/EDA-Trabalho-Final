@@ -80,6 +80,13 @@ public:
      */
     virtual bool insert(const Key& k, const Value& v) = 0;
 
+    /**
+     * @brief Insere a chave com valor inicial ou incrementa o valor existente
+     *        em uma unica passagem (uma busca por operacao).
+     * @return true se a chave foi inserida; false se ja existia e foi incrementada.
+     */
+    virtual bool insert_or_increment(const Key& k, const Value& initial = Value{1}) = 0;
+
 
     /**
      * @brief Retorna uma referencia para o valor associado a chave k.

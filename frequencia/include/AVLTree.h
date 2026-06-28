@@ -259,6 +259,44 @@ public:
 
 
     /**
+     * @brief Insere (k, initial) ou soma initial ao valor existente em uma unica busca.
+     */
+    bool insert_or_increment(const Key& k, const Value& initial = Value{1}) override {
+        if (m_root == nullptr) {
+            m_root = new Node(k, initial);
+            m_number_of_elements++;
+            return true;
+        }
+
+        Node* current = m_root;
+        Node* parent = nullptr;
+
+        while (current != nullptr) {
+            m_metrics.comparisons++;
+            parent = current;
+            if (k == current->key) {
+                current->value += initial;
+                return false;
+            } else if (k < current->key) {
+                current = current->left;
+            } else {
+                current = current->right;
+            }
+        }
+
+        Node* new_node = new Node(k, initial, parent);
+        if (k < parent->key) {
+            parent->left = new_node;
+        } else {
+            parent->right = new_node;
+        }
+        m_number_of_elements++;
+        balance_upwards(parent);
+        return true;
+    }
+
+
+    /**
      * @brief Atualiza o valor de uma chave existente iterativamente.
      * 
      * @param k := chave
@@ -448,8 +486,8 @@ public:
 
 
     void print_csv(std::ostream& os) const override {
-        auto sorted = to_sorted_vector();
-        for (const auto& par : sorted) {
+        for (auto it = begin(); it != end(); ++it) {
+            const auto& par = *it;
             os << par.first << "," << par.second << "\n";
         }
     }
@@ -494,11 +532,11 @@ public:
         }
     };
 
-    Iterator begin() {
+    Iterator begin() const {
         return Iterator(this, m_root);
     }
 
-    Iterator end() {
+    Iterator end() const {
         return Iterator(this, nullptr);
     }
 
