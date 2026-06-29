@@ -10,8 +10,8 @@
  * * As implementacoes concretas podem utilizar diferentes estrategias,
  * como tabelas hash, arvores AVL, arvores Rubro-Negra, entre outras.
  * 
- * @version 0.1
- * @date 2026-05-28
+ * @version 0.3
+ * @date 2026-06-26
  * @copyright Copyright (c) 2026
  * */
 
@@ -40,9 +40,10 @@ struct Metrics {
 
 
 /**
-* Classe-base abstrata (interface) Dictionary
+* Classe-base abstrata Dictionary
 * Todas as implementacoes herdam desta classe.
-* K = tipo da chave   V = tipo do valor
+* K = tipo da chave
+* V = tipo do valor
 */
 template <typename Key, typename Value>
 class Dictionary {
@@ -82,7 +83,7 @@ public:
 
     /**
      * @brief Insere a chave com valor inicial ou incrementa o valor existente
-     *        em uma unica passagem (uma busca por operacao).
+     * em uma unica passagem.
      * @return true se a chave foi inserida; false se ja existia e foi incrementada.
      */
     virtual bool insert_or_increment(const Key& k, const Value& initial = Value{1}) = 0;
@@ -139,11 +140,11 @@ public:
      */
     virtual std::vector<std::pair<Key,Value>> to_sorted_vector() const = 0;
 
-    // Metricas acumuladas desde a criacao (ou ultimo reset)
+    // Metricas acumuladas desde a criacao
     virtual const Metrics& metrics() const = 0;
     virtual void reset_metrics() = 0;
 
-    // Impressao em stream (CSV: chave,frequencia)
+    // Impressao (CSV: chave,frequencia)
     virtual void print_csv(std::ostream& os) const = 0;
 };
 

@@ -72,16 +72,20 @@ static std::string to_lower(const std::string& s) {
  *        Hifen no interior e mantido (ex.: "mostra-lo").
  */
 static std::string strip_edges(const std::string& tok) {
-    size_t l = 0, r = tok.size();
+    size_t l = 0;
+    size_t r = tok.size();
+
     while (l < r) {
         unsigned char c = tok[l];
-        if (std::isalpha(c) || c > 127) break;
-        ++l;
+        if (std::isalpha(c) || c > 127) 
+            break;
+        l++;
     }
     while (r > l) {
         unsigned char c = tok[r - 1];
-        if (std::isalpha(c) || c > 127) break;
-        --r;
+        if (std::isalpha(c) || c > 127) 
+            break;
+        r--;
     }
     return tok.substr(l, r - l);
 }
@@ -267,8 +271,7 @@ static void print_metrics(const std::string& name,
 }
 
 
-static void print_comparison_table(const std::vector<RunResult>& results,
-                                   size_t word_count)
+static void print_comparison_table(const std::vector<RunResult>& results, size_t word_count)
 {
     std::cout << "\n==================== COMPARATIVO ====================\n";
     std::cout << std::left << std::setw(30) << "Estrutura"
@@ -305,8 +308,7 @@ static void print_comparison_table(const std::vector<RunResult>& results,
  * @param out_path  caminho do arquivo de saida
  * @return true se gravado com sucesso
  */
-static bool write_csv(Dictionary<std::string, int>& dict,
-                      const std::string& out_path) {
+static bool write_csv(Dictionary<std::string, int>& dict, const std::string& out_path) {
     std::filesystem::path path(out_path);
     if (path.has_parent_path()) {
         std::filesystem::create_directories(path.parent_path());
@@ -324,9 +326,7 @@ static bool write_csv(Dictionary<std::string, int>& dict,
 }
 
 
-static std::string resolve_csv_path(const std::string& output_dir,
-                                    const std::string& csv_arg,
-                                    const std::string& default_name) {
+static std::string resolve_csv_path(const std::string& output_dir, const std::string& csv_arg, const std::string& default_name) {
     if (csv_arg.empty()) {
         return output_dir + default_name;
     }
@@ -340,7 +340,7 @@ static std::string resolve_csv_path(const std::string& output_dir,
 
 
 static std::string resolve_text_path(const std::string& txt_arg) {
-    // Monta o caminho completo: se o usuario ja passou um caminho com
+    // Monta o caminho completo, se o usuario ja passou um caminho com
     // separador (/ ou \), usa direto; caso contrario, prefixo books_dir.
     if (txt_arg.find('/') != std::string::npos ||
         txt_arg.find('\\') != std::string::npos) {
@@ -358,8 +358,6 @@ static std::string resolve_text_path(const std::string& txt_arg) {
     return txt_file;
 }
 
-
-// Fabrica de dicionarios e nomes amigaveis
 
 using DictPtr = std::unique_ptr<Dictionary<std::string, int>>;
 
@@ -397,10 +395,8 @@ static std::string friendly_name(const std::string& type) {
  * @param out_csv caminho do CSV de saida (vazio = nao grava)
  * @param write_output true se deve gravar o CSV
  */
-static RunResult run_structure(const std::string& type,
-                               const std::vector<std::string>& words,
-                               const std::string& out_csv,
-                               bool write_output)
+static RunResult run_structure(const std::string& type, const std::vector<std::string>& words, 
+    const std::string& out_csv, bool write_output)
 {
     RunResult result;
     result.type = type;
@@ -432,7 +428,6 @@ static RunResult run_structure(const std::string& type,
 
 
 // Ajuda
-
 static void print_help(const char* prog) {
     std::cout
         << "\nUso:\n"
@@ -475,9 +470,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::string subcmd   = argv[1];
-    std::string type     = argv[2];
-    std::string txt_arg  = argv[3];   // nome do livro passado pelo usuario
+    std::string subcmd = argv[1];
+    std::string type = argv[2];
+    std::string txt_arg = argv[3];
     std::string csv_file = (argc >= 5) ? argv[4] : "";
 
     if (subcmd != "dictionary") {
@@ -488,7 +483,7 @@ int main(int argc, char* argv[]) {
 
     std::string txt_file = resolve_text_path(txt_arg);
 
-    // Le e tokeniza o arquivo uma unica vez (compartilhado por todas as estruturas)
+    // Le e tokeniza o arquivo uma unica vez
     std::cout << "Lendo arquivo: " << txt_file << " ...\n";
     std::vector<std::string> words = tokenize(txt_file);
 
@@ -504,14 +499,12 @@ int main(int argc, char* argv[]) {
     std::string book_name = txt_path.stem().string();   // nome sem extensão
 
     // Pasta de saida: sheet_results/<nome_do_livro>/
-    // Criada automaticamente se não existir
+    // Criada se não existir
     const std::string output_dir = "sheet_results/" + book_name + "/";
     std::filesystem::create_directories(output_dir);
 
     if (type == "all") {
         // Executa as quatro estruturas em sequencia.
-        // Cada estrutura gera seu proprio CSV em sheet_results/<livro>/.
-        // Ex.: sheet_results/dom_casmurro/avl.csv
         const std::vector<std::string> all_types = {"avl", "rb", "hash-chain", "hash-open"};
         std::vector<RunResult> results;
         results.reserve(all_types.size());
